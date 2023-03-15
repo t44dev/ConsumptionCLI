@@ -54,7 +54,3 @@ class Novel(Consumable):
 
     def get(cls, id : int) -> Novel:
         pass
-
-if __name__ == "__main__":
-    c = Novel(123, "!233", 5, 0, 23, 2.5, 17828123, 1298123, None)
-    print(c)
