@@ -1,5 +1,6 @@
 # draw.io
-*.bkp
+*.drawio.bkp
+*.drawio.dtmp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
