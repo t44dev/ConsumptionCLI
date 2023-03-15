@@ -1,3 +1,6 @@
+# SQLite3
+*.db
+
 # draw.io
 *.drawio.bkp
 *.drawio.dtmp

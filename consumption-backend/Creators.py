@@ -3,7 +3,7 @@ from __future__ import annotations # For self-referential type-hints
 from typing import Union
 
 # Package Imports
-from .DatabaseEntity import DatabaseEntity
+from Database import DatabaseEntity, SQLiteDatabaseHandler
 
 class Creator(DatabaseEntity):
 
@@ -19,10 +19,16 @@ class Author(Creator):
         self.pseudonym = pseudonym
 
     def save() -> None:
-        pass
+        SQLiteDatabaseHandler.get_db()
 
+    @classmethod
     def find(cls, *args, **kwargs) -> list[Author]:
         pass
 
+    @classmethod
     def get(cls, id : int) -> Author:
+        pass
+
+    @classmethod
+    def _instantiate_table(cls) -> None:
         pass

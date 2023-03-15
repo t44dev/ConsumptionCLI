@@ -4,7 +4,7 @@ from typing import Union
 from datetime import datetime
 
 # Package Imports
-from DatabaseEntity import DatabaseEntity
+from Database import DatabaseEntity, SQLiteDatabaseHandler
 from Creators import Author
 
 class Consumable(DatabaseEntity):
@@ -49,8 +49,30 @@ class Novel(Consumable):
     def save() -> None:
         pass
 
+    @classmethod
     def find(cls, *args, **kwargs) -> list[Novel]:
         pass
 
+    @classmethod    
     def get(cls, id : int) -> Novel:
         pass
+
+    @classmethod
+    def _instantiate_table(cls) -> None:
+        cur = SQLiteDatabaseHandler.get_db().cursor
+        cur.execute("""CREATE TABLE IF NOT EXISTS novels(
+                    nov_id INTEGER,
+                    author_id INTEGER,
+                    nov_name TEXT NOT NULL,
+                    nov_major_parts INTEGER NOT NULL DEFAULT 0,
+                    nov_minor_parts INTEGER NOT NULL DEFAULT 0,
+                    nov_completions INTEGER NOT NULL DEFAULT 0,
+                    nov_rating REAL NOT NULL DEFAULT 0.0,
+                    nov_start_date INTEGER NOT NULL,
+                    nov_end_date INTEGER,
+                    PRIMARY KEY (nov_id),
+                    FOREIGN KEY (author_id)
+                        REFERENCES authors (author_id)
+                        ON DELETE SET NULL
+                        ON UPDATE NO ACTION
+        )""")
