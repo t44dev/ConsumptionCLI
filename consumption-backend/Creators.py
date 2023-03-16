@@ -18,17 +18,24 @@ class Author(Creator):
         super().__init__(id, first_name, last_name)
         self.pseudonym = pseudonym
 
-    def save() -> None:
-        SQLiteDatabaseHandler.get_db()
+    def save(self) -> None:
+        self._instantiate_table()
 
     @classmethod
     def find(cls, *args, **kwargs) -> list[Author]:
-        pass
+        cls._instantiate_table()
 
     @classmethod
     def get(cls, id : int) -> Author:
-        pass
+        cls._instantiate_table()
 
     @classmethod
     def _instantiate_table(cls) -> None:
-        pass
+        cur = SQLiteDatabaseHandler.get_db().cursor
+        cur.execute("""CREATE TABLE IF NOT EXISTS authors(
+                    author_id,
+                    author_first_name TEXT,
+                    author_last_name TEXT,
+                    author_pseudonym TEXT,
+                    PRIMARY KEY (author_id)
+        )""")

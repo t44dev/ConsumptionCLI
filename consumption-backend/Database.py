@@ -11,7 +11,7 @@ class DatabaseEntity(ABC):
         self.id = id    # None if created by user and internal db id if get() used.
     
     @abstractmethod
-    def save() -> None:
+    def save(self) -> None:
         pass
 
     @classmethod

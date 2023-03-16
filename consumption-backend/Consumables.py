@@ -46,16 +46,16 @@ class Novel(Consumable):
         super().__init__(id, name, major_parts, minor_parts, completions, rating, start_date, end_date)
         self.author = author
     
-    def save() -> None:
-        pass
+    def save(self) -> None:
+        self._instantiate_table()
 
     @classmethod
     def find(cls, *args, **kwargs) -> list[Novel]:
-        pass
+        cls._instantiate_table()
 
     @classmethod    
     def get(cls, id : int) -> Novel:
-        pass
+        cls._instantiate_table()
 
     @classmethod
     def _instantiate_table(cls) -> None:
