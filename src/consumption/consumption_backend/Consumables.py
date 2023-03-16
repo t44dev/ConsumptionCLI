@@ -4,8 +4,8 @@ from typing import Union
 from datetime import datetime
 
 # Package Imports
-from Database import DatabaseEntity, SQLiteDatabaseHandler
-from Creators import Author
+from .Database import DatabaseEntity, SQLiteDatabaseHandler
+from .Creators import Author
 
 class Consumable(DatabaseEntity):
     
@@ -46,7 +46,7 @@ class Novel(Consumable):
         super().__init__(id, name, major_parts, minor_parts, completions, rating, start_date, end_date)
         self.author = author
     
-    def save(self) -> None:
+    def save(self) -> int:
         self._instantiate_table()
 
     @classmethod
@@ -61,7 +61,7 @@ class Novel(Consumable):
     def _instantiate_table(cls) -> None:
         cur = SQLiteDatabaseHandler.get_db().cursor
         cur.execute("""CREATE TABLE IF NOT EXISTS novels(
-                    nov_id INTEGER,
+                    nov_id INTEGER PRIMARY KEY NOT NULL UNIQUE DEFAULT 0,
                     author_id INTEGER,
                     nov_name TEXT NOT NULL,
                     nov_major_parts INTEGER NOT NULL DEFAULT 0,
@@ -70,9 +70,7 @@ class Novel(Consumable):
                     nov_rating REAL NOT NULL DEFAULT 0.0,
                     nov_start_date INTEGER NOT NULL,
                     nov_end_date INTEGER,
-                    PRIMARY KEY (nov_id),
                     FOREIGN KEY (author_id)
                         REFERENCES authors (author_id)
                         ON DELETE SET NULL
-                        ON UPDATE NO ACTION
-        )""")
+                        ON UPDATE NO ACTION)""")

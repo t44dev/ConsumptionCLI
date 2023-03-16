@@ -1,17 +1,18 @@
 # General Imports
 from __future__ import annotations # For self-referential type-hints
 from abc import abstractmethod, ABC
+from typing import Union
 import json
 import sqlite3
 
 class DatabaseEntity(ABC):
     
-    def __init__(self, id : int) -> None:
+    def __init__(self, id : Union[int, None]) -> None:
         super().__init__()
         self.id = id    # None if created by user and internal db id if get() used.
     
     @abstractmethod
-    def save(self) -> None:
+    def save(self) -> int:
         pass
 
     @classmethod
