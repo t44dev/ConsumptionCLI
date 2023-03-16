@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "consumption"
+version = "0.0.1"
+authors = [
+  { name="track-44", email="trackfortyfour@proton.me" },
+]
+description = "A CLI tool for tracking consumption of media including Novels, Movies, TV Series and more."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: SQL",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Natural Language :: English",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/track-44/consumption"
+"Bug Tracker" = "https://github.com/track-44/consumption/issues"
