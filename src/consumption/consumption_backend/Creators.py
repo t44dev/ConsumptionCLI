@@ -8,9 +8,12 @@ from .Database import DatabaseEntity, SQLiteDatabaseHandler
 class Creator(DatabaseEntity):
 
     def __init__(self, id : Union[int, None], first_name : Union[str, None], last_name : Union[str, None]):
-        self.id = id
+        super().__init__(id)
         self.first_name = first_name
         self.last_name = last_name
+    
+    def __eq__(self, other: Creator) -> bool:
+        return super().__eq__(other) and self.first_name == other.first_name and self.last_name == other.last_name
 
 class Author(Creator):
 
@@ -56,3 +59,6 @@ class Author(Creator):
                                                         author_first_name TEXT,
                                                         author_last_name TEXT,
                                                         author_pseudonym TEXT)""")
+    
+    def __eq__(self, other: Author) -> bool:
+        return super().__eq__(other) and self.pseudonym == other.pseudonym

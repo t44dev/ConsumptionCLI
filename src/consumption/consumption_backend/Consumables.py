@@ -27,6 +27,16 @@ class Consumable(DatabaseEntity):
         # Using unix-timestamp
         self.start_date = datetime.fromtimestamp(start_date)
         self.end_date = datetime.fromtimestamp(end_date) if end_date else end_date
+    
+    def __eq__(self, other: Consumable) -> bool:
+        return super().__eq__(other) \
+            and self.name == other.name \
+            and self.major_parts == other.major_parts \
+            and self.minor_parts == other.minor_parts \
+            and self.completions == other.completions \
+            and self.rating == other.rating \
+            and self.start_date == other.start_date \
+            and self.end_date == other.end_date
 
 class Novel(Consumable):
 
@@ -108,3 +118,6 @@ class Novel(Consumable):
                         REFERENCES authors (author_id)
                         ON DELETE SET NULL
                         ON UPDATE NO ACTION)""")
+        
+    def __eq__(self, other: Novel) -> bool:
+        return super().__eq__(other) and self.author == other.author

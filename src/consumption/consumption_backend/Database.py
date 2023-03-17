@@ -30,6 +30,9 @@ class DatabaseEntity(ABC):
     def _instantiate_table(cls) -> None:
         pass
 
+    def __eq__(self, other : DatabaseEntity) -> bool:
+        return self.id == other.id
+
 class SQLiteDatabaseHandler():
 
     DB_CONNECTION : sqlite3.Connection = None
