@@ -48,14 +48,48 @@ class Novel(Consumable):
     
     def save(self) -> int:
         self._instantiate_table()
+        db = SQLiteDatabaseHandler.get_db()
+        id = db.cursor().execute("""INSERT INTO novels(
+                            nov_id,
+                            author_id,
+                            nov_name,
+                            nov_major_parts,
+                            nov_minor_parts,
+                            nov_completions,
+                            nov_rating,
+                            nov_start_date,
+                            nov_end_date)
+                            VALUES(?,?,?,?,?,?,?,?,?)""", 
+                            (None, 
+                             self.author.id, 
+                             self.name, 
+                             self.major_parts, 
+                             self.minor_parts, 
+                             self.completions, 
+                             self.rating, 
+                             self.start_date.timestamp(),
+                             self.end_date.timestamp())).lastrowid
+        db.commit()
+        return id
 
     @classmethod
     def find(cls, *args, **kwargs) -> list[Novel]:
         cls._instantiate_table()
+        params = tuple(kwargs[key] for key in kwargs.keys())
+        keys = list(kwargs.keys())
+        sql = "SELECT * FROM novels"
+        if params:
+            sql += f" WHERE {keys[0]} = ?"
+            for i in range(1, len(params)):
+                sql += f" AND {keys[i]} = ?"
+        novels = SQLiteDatabaseHandler.get_db().cursor().execute(sql, params).fetchall()
+        return [Novel(*novel_data) for novel_data in novels]
 
     @classmethod    
     def get(cls, id : int) -> Novel:
         cls._instantiate_table()
+        novel_data = SQLiteDatabaseHandler.get_db().cursor().execute("""SELECT * FROM novels WHERE nov_id = ?""", (id, )).fetchone()
+        return Novel(*novel_data)
 
     @classmethod
     def _instantiate_table(cls) -> None:
@@ -68,8 +102,8 @@ class Novel(Consumable):
                     nov_minor_parts INTEGER NOT NULL DEFAULT 0,
                     nov_completions INTEGER NOT NULL DEFAULT 0,
                     nov_rating REAL NOT NULL DEFAULT 0.0,
-                    nov_start_date INTEGER NOT NULL,
-                    nov_end_date INTEGER,
+                    nov_start_date REAL NOT NULL,
+                    nov_end_date REAL,
                     FOREIGN KEY (author_id)
                         REFERENCES authors (author_id)
                         ON DELETE SET NULL
