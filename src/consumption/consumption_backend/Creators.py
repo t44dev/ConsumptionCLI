@@ -40,15 +40,14 @@ class Author(Creator):
             sql += f" WHERE {keys[0]} = ?"
             for i in range(1, len(params)):
                 sql += f" AND {keys[i]} = ?"
-        print(sql, params)
         authors = SQLiteDatabaseHandler.get_db().cursor().execute(sql, params).fetchall()
-        return authors
+        return [Author(*author_data) for author_data in authors]
 
     @classmethod
     def get(cls, id : int) -> Author:
         cls._instantiate_table()
-        author = SQLiteDatabaseHandler.get_db().cursor().execute("""SELECT * FROM authors WHERE author_id = ?""", (id, )).fetchone()
-        return author
+        author_data = SQLiteDatabaseHandler.get_db().cursor().execute("""SELECT * FROM authors WHERE author_id = ?""", (id, )).fetchone()
+        return Author(*author_data)
 
     @classmethod
     def _instantiate_table(cls) -> None:

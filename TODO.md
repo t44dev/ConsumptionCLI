@@ -1,0 +1,43 @@
+# TODO LIST
+
+- [ ] Backend Development
+    - [x] Implement Base Abstract Classes
+        - [x] DatabaseEntity
+        - [x] DatabaseHandler
+        - [x] Consumable
+        - [x] Creator
+    - [ ] Implement Child Classes
+        - [ ] Author
+        - [ ] Novel
+        - [ ] Comic
+        - [ ] Director
+        - [ ] Actor
+        - [ ] Movie
+        - [ ] TV Series
+        - [ ] Characters
+    - [ ] Refactor
+        - [ ] General DatabaseHandler for usage of multiple DB solutions.
+        - [ ] Don't repeat code across classes for database operations.
+        - [ ] No SQL in non-database classes.
+        - [ ] Staff as parent to creators.
+- [ ] CLI Frontend
+    - [ ] Allow access from command-line.
+    - [ ] Implement Creation
+        - [ ] Creating Authors
+    - [ ] Implement in progress functionality
+        - [ ] Reading Novels
+        - [ ] Reading Comic
+        - [ ] Watching Movies
+        - [ ] Watching TV Series
+    - [ ] Allow update to progress
+        - [ ] Update Progress Author
+        - [ ] Update Progress Novel
+        - [ ] Update Progress Comic
+        - [ ] Update Progress Movie
+        - [ ] Update Progress TV Series
+    - [ ] Allow general updates and deletions
+        - [ ] Update/Delete Author
+        - [ ] Update/Delete Novel
+        - [ ] Update/Delete Comic
+        - [ ] Update/Delete Movie
+        - [ ] Update/Delete TV Series
