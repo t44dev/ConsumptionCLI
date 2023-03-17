@@ -10,21 +10,21 @@ from .Creators import Author
 class Consumable(DatabaseEntity):
     
     def __init__(self, \
-                 id : Union[int, None], \
-                 name : str, \
-                 major_parts : int, \
-                 minor_parts : int, \
-                 completions : int, \
-                 rating : Union[float, None], \
-                 start_date : int, \
-                 end_date : Union[int, None]) -> None:
+                 id : Union[int, None] = None, \
+                 name : str = "", \
+                 major_parts : int = 0, \
+                 minor_parts : int = 0, \
+                 completions : int = 0, \
+                 rating : Union[float, None] = None, \
+                 start_date : float = datetime.utcnow().timestamp(), \
+                 end_date : Union[float, None] = None) -> None:
         super().__init__(id)
         self.name = name
         self.major_parts = major_parts
         self.minor_parts = minor_parts
         self.completions = completions
         self.rating = rating
-        # Using unix-timestamp
+        # Using posix-timestamp
         self.start_date = datetime.fromtimestamp(start_date)
         self.end_date = datetime.fromtimestamp(end_date) if end_date else end_date
     
@@ -44,15 +44,15 @@ class Novel(Consumable):
     MINOR_PART_NAME = "Chapter"
 
     def __init__(self, 
-                 id : Union[int, None], \
-                 name : str, \
-                 major_parts : int, \
-                 minor_parts : int, \
-                 completions : int, \
-                 rating : Union[float, None], \
-                 start_date : int, \
-                 end_date : Union[int, None], \
-                 author : Union[Author, None]) -> None:
+                 id : Union[int, None] = None, \
+                 name : str = "", \
+                 major_parts : int = 0, \
+                 minor_parts : int = 0, \
+                 completions : int = 0, \
+                 rating : Union[float, None] = None, \
+                 start_date : float = datetime.utcnow().timestamp(), \
+                 end_date : Union[float, None] = None, \
+                 author : Union[Author, None] = None) -> None:
         super().__init__(id, name, major_parts, minor_parts, completions, rating, start_date, end_date)
         self.author = author
     
@@ -61,24 +61,24 @@ class Novel(Consumable):
         db = SQLiteDatabaseHandler.get_db()
         id = db.cursor().execute("""INSERT INTO novels(
                             nov_id,
-                            author_id,
                             nov_name,
                             nov_major_parts,
                             nov_minor_parts,
                             nov_completions,
                             nov_rating,
                             nov_start_date,
-                            nov_end_date)
+                            nov_end_date,
+                            author_id)
                             VALUES(?,?,?,?,?,?,?,?,?)""", 
                             (None, 
-                             self.author.id, 
                              self.name, 
                              self.major_parts, 
                              self.minor_parts, 
                              self.completions, 
-                             self.rating, 
+                             self.rating,
                              self.start_date.timestamp(),
-                             self.end_date.timestamp())).lastrowid
+                             self.end_date.timestamp() if self.end_date else self.end_date,
+                             self.author.id if self.author else self.author)).lastrowid
         db.commit()
         return id
 
@@ -103,17 +103,17 @@ class Novel(Consumable):
 
     @classmethod
     def _instantiate_table(cls) -> None:
-        cur = SQLiteDatabaseHandler.get_db().cursor
+        cur = SQLiteDatabaseHandler.get_db().cursor()
         cur.execute("""CREATE TABLE IF NOT EXISTS novels(
                     nov_id INTEGER PRIMARY KEY NOT NULL UNIQUE DEFAULT 0,
-                    author_id INTEGER,
                     nov_name TEXT NOT NULL,
                     nov_major_parts INTEGER NOT NULL DEFAULT 0,
                     nov_minor_parts INTEGER NOT NULL DEFAULT 0,
                     nov_completions INTEGER NOT NULL DEFAULT 0,
-                    nov_rating REAL NOT NULL DEFAULT 0.0,
+                    nov_rating REAL,
                     nov_start_date REAL NOT NULL,
                     nov_end_date REAL,
+                    author_id INTEGER,
                     FOREIGN KEY (author_id)
                         REFERENCES authors (author_id)
                         ON DELETE SET NULL

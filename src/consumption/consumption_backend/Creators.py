@@ -7,7 +7,10 @@ from .Database import DatabaseEntity, SQLiteDatabaseHandler
 
 class Creator(DatabaseEntity):
 
-    def __init__(self, id : Union[int, None], first_name : Union[str, None], last_name : Union[str, None]):
+    def __init__(self, \
+                 id : Union[int, None] = None, \
+                 first_name : Union[str, None] = None, \
+                 last_name : Union[str, None] = None) -> None:
         super().__init__(id)
         self.first_name = first_name
         self.last_name = last_name
@@ -17,7 +20,11 @@ class Creator(DatabaseEntity):
 
 class Author(Creator):
 
-    def __init__(self, id: Union[int, None], first_name: Union[str, None], last_name: Union[str, None], pseudonym : Union[str, None]):
+    def __init__(self, \
+                 id: Union[int, None] = None, \
+                 first_name: Union[str, None] = None, \
+                 last_name: Union[str, None] = None, \
+                 pseudonym : Union[str, None] = None) -> None:
         super().__init__(id, first_name, last_name)
         self.pseudonym = pseudonym
 

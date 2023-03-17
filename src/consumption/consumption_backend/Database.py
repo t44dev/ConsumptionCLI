@@ -7,7 +7,7 @@ import sqlite3
 
 class DatabaseEntity(ABC):
     
-    def __init__(self, id : Union[int, None]) -> None:
+    def __init__(self, id : Union[int, None] = None) -> None:
         super().__init__()
         self.id = id    # None if created by user and internal db id if get() used.
     
