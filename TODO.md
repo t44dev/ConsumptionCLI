@@ -20,10 +20,22 @@
         - [ ] Don't repeat code across classes for database operations.
         - [ ] No SQL in non-database classes.
         - [ ] Staff as parent to creators.
+    - [ ] Tests
+        - [ ] Test Author Database Access
+        - [ ] Test Novel Database Access
+        - [ ] Test Comic Database Access
+        - [ ] Test Director Database Access
+        - [ ] Test Actor Database Access
+        - [ ] Test Movie Database Access
+        - [ ] Test TV Series Database Access
+        - [ ] Test Characters Database Access
 - [ ] CLI Frontend
     - [ ] Allow access from command-line.
-    - [ ] Implement Creation
-        - [ ] Creating Authors
+    - [ ] Implement creation and assigning
+        - [ ] Creating/Assigning Author
+        - [ ] Creating/Assigning Director
+        - [ ] Creating/Assigning Actor
+        - [ ] Creating/Assigning Characters
     - [ ] Implement in progress functionality
         - [ ] Reading Novels
         - [ ] Reading Comic
@@ -41,3 +53,6 @@
         - [ ] Update/Delete Comic
         - [ ] Update/Delete Movie
         - [ ] Update/Delete TV Series
+        - [ ] Update/Delete Actor
+        - [ ] Update/Delete Director
+        - [ ] Update/Delete Character
