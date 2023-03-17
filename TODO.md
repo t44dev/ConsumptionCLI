@@ -20,15 +20,27 @@
         - [ ] Don't repeat code across classes for database operations.
         - [ ] No SQL in non-database classes.
         - [ ] Staff as parent to creators.
+        - [ ] Advanced find (<, >, <=, >=, = for numerical values)
+        - [ ] Advanced find (regex for strings)
     - [ ] Tests
-        - [ ] Test Author Database Access
-        - [ ] Test Novel Database Access
+        - [x] Test Author Database Access
+        - [x] Test Novel Database Access
         - [ ] Test Comic Database Access
         - [ ] Test Director Database Access
         - [ ] Test Actor Database Access
         - [ ] Test Movie Database Access
         - [ ] Test TV Series Database Access
         - [ ] Test Characters Database Access
+    - [ ] Write Docstrings
+        - [ ] Database
+        - [ ] Novel
+        - [ ] Author
+        - [ ] Comic
+        - [ ] Director
+        - [ ] Actor
+        - [ ] Movie
+        - [ ] TV Series
+        - [ ] Characters
 - [ ] CLI Frontend
     - [ ] Allow access from command-line.
     - [ ] Implement creation and assigning
