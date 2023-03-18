@@ -1,6 +1,7 @@
 # General Imports
 from __future__ import annotations # For self-referential type-hints
 from pathlib import Path
+import os
 from abc import abstractmethod, ABC
 from typing import Union
 import json
@@ -49,6 +50,7 @@ class SQLiteDatabaseHandler():
         if not SQLiteDatabaseHandler.DB_CONNECTION:
             with open(CONFIG_PATH, "r") as f:
                 cfg = json.load(f)
-                DB_PATH = Path.home() / cfg["DB_PATH"]
+                DB_PATH = Path(os.path.expanduser(cfg["DB_PATH"]))
+                print(str(DB_PATH))
                 cls.DB_CONNECTION = sqlite3.connect(DB_PATH)
         return cls.DB_CONNECTION

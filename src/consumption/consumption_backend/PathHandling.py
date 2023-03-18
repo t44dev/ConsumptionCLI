@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 
 DEFAULT_CONFIG = {
-    "DB_PATH" : "Consumption/consumption.db"
+    "DB_PATH" : "~/Consumption/consumption.db"
 }
 
 CONSUMPTION_PATH = Path.home() / "Consumption"
