@@ -1,9 +1,13 @@
 # General Imports
 from __future__ import annotations # For self-referential type-hints
+from pathlib import Path
 from abc import abstractmethod, ABC
 from typing import Union
 import json
 import sqlite3
+
+# Package Imports
+from .PathHandling import CONFIG_PATH
 
 class DatabaseEntity(ABC):
     
@@ -43,8 +47,8 @@ class SQLiteDatabaseHandler():
     @classmethod
     def get_db(cls) -> sqlite3.Connection:
         if not SQLiteDatabaseHandler.DB_CONNECTION:
-            with open("settings.json", "r") as f:
-                settings = json.load(f)
-                f.close()
-                cls.DB_CONNECTION = sqlite3.connect(settings["DB_PATH"])
+            with open(CONFIG_PATH, "r") as f:
+                cfg = json.load(f)
+                DB_PATH = Path.home() / cfg["DB_PATH"]
+                cls.DB_CONNECTION = sqlite3.connect(DB_PATH)
         return cls.DB_CONNECTION
