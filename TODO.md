@@ -41,8 +41,9 @@
         - [ ] Movie
         - [ ] TV Series
         - [ ] Characters
+    - [ ] Export from DB to more standard file format
 - [ ] CLI Frontend
-    - [ ] Allow access from command-line.
+    - [ ] Allow direct access from command-line on all platforms.
     - [ ] Implement creation and assigning
         - [ ] Creating/Assigning Author
         - [ ] Creating/Assigning Director
