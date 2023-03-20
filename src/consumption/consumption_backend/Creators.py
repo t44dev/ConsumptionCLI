@@ -17,6 +17,9 @@ class Creator(DatabaseEntity):
     
     def __eq__(self, other: Creator) -> bool:
         return super().__eq__(other) and self.first_name == other.first_name and self.last_name == other.last_name
+    
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__} | {self.first_name} {self.last_name} created with ID: {self.id}"
 
 class Author(Creator):
 
@@ -38,6 +41,7 @@ class Author(Creator):
                             author_pseudonym)
                             VALUES(?,?,?,?)""", (None, self.first_name, self.last_name, self.pseudonym)).lastrowid
         db.commit()
+        self.id = id
         return id
 
     @classmethod

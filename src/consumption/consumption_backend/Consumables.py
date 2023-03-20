@@ -37,6 +37,9 @@ class Consumable(DatabaseEntity):
             and self.rating == other.rating \
             and self.start_date == other.start_date \
             and self.end_date == other.end_date
+    
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__} | {self.name} created with ID: {self.id}"
 
 class Novel(Consumable):
 
@@ -80,6 +83,7 @@ class Novel(Consumable):
                              self.end_date.timestamp() if self.end_date else self.end_date,
                              self.author.id if self.author else self.author)).lastrowid
         db.commit()
+        self.id = id
         return id
 
     @classmethod

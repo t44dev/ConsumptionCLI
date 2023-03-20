@@ -6,7 +6,7 @@ DEFAULT_CONFIG = {
     "DB_PATH" : "~/.consumption/consumption.db"
 }
 
-CONSUMPTION_PATH = Path.home() / "Consumption"
+CONSUMPTION_PATH = Path.home() / ".consumption"
 CONFIG_PATH = CONSUMPTION_PATH / "config.json"
 
 def setup_config():
