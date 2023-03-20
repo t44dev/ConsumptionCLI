@@ -8,7 +8,7 @@ import json
 import sqlite3
 
 # Package Imports
-from .PathHandling import CONFIG_PATH
+from .path_handling import CONFIG_PATH
 
 class DatabaseEntity(ABC):
     
