@@ -1,2 +1,6 @@
-def novel(*args, **kwargs):
-    print(*args, **kwargs)
+# General Imports
+from tabulate import tabulate
+
+def novel(*args, **kwargs) -> str:
+    # print("Args: ", args, "Kwargs: ", kwargs)
+    pass
