@@ -14,7 +14,7 @@ class DatabaseEntity(ABC):
     
     def __init__(self, id : Union[int, None] = None) -> None:
         super().__init__()
-        self.id = id    # None if created by user and internal db id if get() used.
+        self.id = id    # None if not presently in the database, else the internal db id.
     
     @abstractmethod
     def save(self) -> int:
