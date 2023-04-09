@@ -1,4 +1,8 @@
+# General Imports
 import argparse
+
+# Package Imports
+from .SubdictAction import SubdictAction
 from .consumable_funcs import novel
 from .creator_funcs import author
 
@@ -23,9 +27,9 @@ novel_parser.set_defaults(_func = novel)
 ## Author
 author_parser = sub_parsers.add_parser("author")
 author_parser.set_defaults(_func = author)
-author_parser.add_argument("-i", "--id", type=int, dest="id")
-author_parser.add_argument("--fn", "--firstname", dest="firstname")
-author_parser.add_argument("--ln", "--lastname", dest="lastname")
-author_parser.add_argument("--ps", "--pseudonym", dest="pseudonym")
+author_parser.add_argument("-i", "--id", type=int, dest="author_id", action=SubdictAction)
+author_parser.add_argument("--fn", "--firstname", dest="author_first_name", action=SubdictAction)
+author_parser.add_argument("--ln", "--lastname", dest="author_last_name", action=SubdictAction)
+author_parser.add_argument("--ps", "--pseudonym", dest="author_pseudonym", action=SubdictAction)
 author_parser.add_argument("--order", choices=["id", "firstname", "lastname", "pseudonym"], default="id")
 author_parser.add_argument("--invertorder", action="store_true")
