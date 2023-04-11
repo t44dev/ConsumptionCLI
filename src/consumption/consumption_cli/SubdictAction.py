@@ -1,8 +1,8 @@
 from argparse import Action, ArgumentParser, Namespace
-from typing import Sequence, Any, TypeVar
+from typing import Sequence, Any
 
-_T = TypeVar("_T")
-
+# Thanks to hpaulj for the main ideas around this implementation https://stackoverflow.com/a/18677482
+# Needs to be scrapped in favour of subclassing ArgumentParser at some point for better handling of default values (currently handled in __main__.py)
 class SubdictAction(Action):
 
     SUBDICT_DEST = "subdict"

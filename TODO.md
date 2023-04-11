@@ -69,3 +69,4 @@
         - [ ] Update/Delete Actor
         - [ ] Update/Delete Director
         - [ ] Update/Delete Character
+    - [ ] Subclass ArgumentParser for better Subdict implementation
