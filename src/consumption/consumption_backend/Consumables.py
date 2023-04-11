@@ -63,14 +63,14 @@ class Novel(Consumable):
         self._instantiate_table()
         db = SQLiteDatabaseHandler.get_db()
         id = db.cursor().execute("""INSERT INTO novels(
-                            nov_id,
-                            nov_name,
-                            nov_major_parts,
-                            nov_minor_parts,
-                            nov_completions,
-                            nov_rating,
-                            nov_start_date,
-                            nov_end_date,
+                            id,
+                            name,
+                            major_parts,
+                            minor_parts,
+                            completions,
+                            rating,
+                            start_date,
+                            end_date,
                             author_id)
                             VALUES(?,?,?,?,?,?,?,?,?)""", 
                             (None, 
@@ -109,14 +109,14 @@ class Novel(Consumable):
     def _instantiate_table(cls) -> None:
         cur = SQLiteDatabaseHandler.get_db().cursor()
         cur.execute("""CREATE TABLE IF NOT EXISTS novels(
-                    nov_id INTEGER PRIMARY KEY NOT NULL UNIQUE DEFAULT 0,
-                    nov_name TEXT NOT NULL,
-                    nov_major_parts INTEGER NOT NULL DEFAULT 0,
-                    nov_minor_parts INTEGER NOT NULL DEFAULT 0,
-                    nov_completions INTEGER NOT NULL DEFAULT 0,
-                    nov_rating REAL,
-                    nov_start_date REAL NOT NULL,
-                    nov_end_date REAL,
+                    id INTEGER PRIMARY KEY NOT NULL UNIQUE DEFAULT 0,
+                    name TEXT NOT NULL,
+                    major_parts INTEGER NOT NULL DEFAULT 0,
+                    minor_parts INTEGER NOT NULL DEFAULT 0,
+                    completions INTEGER NOT NULL DEFAULT 0,
+                    rating REAL,
+                    start_date REAL NOT NULL,
+                    end_date REAL,
                     author_id INTEGER,
                     FOREIGN KEY (author_id)
                         REFERENCES authors (author_id)

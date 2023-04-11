@@ -35,10 +35,10 @@ class Author(Creator):
         self._instantiate_table()
         db = SQLiteDatabaseHandler.get_db()
         id = db.cursor().execute("""INSERT INTO authors(
-                            author_id,
-                            author_first_name,
-                            author_last_name,
-                            author_pseudonym)
+                            id,
+                            first_name,
+                            last_name,
+                            pseudonym)
                             VALUES(?,?,?,?)""", (None, self.first_name, self.last_name, self.pseudonym)).lastrowid
         db.commit()
         self.id = id
@@ -60,16 +60,16 @@ class Author(Creator):
     @classmethod
     def get(cls, id : int) -> Author:
         cls._instantiate_table()
-        author_data = SQLiteDatabaseHandler.get_db().cursor().execute("""SELECT * FROM authors WHERE author_id = ?""", (id, )).fetchone()
+        author_data = SQLiteDatabaseHandler.get_db().cursor().execute("""SELECT * FROM authors WHERE id = ?""", (id, )).fetchone()
         return Author(*author_data)
 
     @classmethod
     def _instantiate_table(cls) -> None:
         SQLiteDatabaseHandler.get_db().cursor().execute("""CREATE TABLE IF NOT EXISTS authors(
-                                                        author_id INTEGER PRIMARY KEY NOT NULL,
-                                                        author_first_name TEXT,
-                                                        author_last_name TEXT,
-                                                        author_pseudonym TEXT)""")
+                                                        id INTEGER PRIMARY KEY NOT NULL,
+                                                        first_name TEXT,
+                                                        last_name TEXT,
+                                                        pseudonym TEXT)""")
     
     def __eq__(self, other: Author) -> bool:
         return super().__eq__(other) and self.pseudonym == other.pseudonym
