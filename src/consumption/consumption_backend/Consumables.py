@@ -39,7 +39,7 @@ class Consumable(DatabaseEntity):
             and self.end_date == other.end_date
     
     def __str__(self) -> str:
-        return f"{self.__class__.__name__} | {self.name} created with ID: {self.id}"
+        return f"{self.__class__.__name__} | {self.name} with ID: {self.id}"
 
 class Novel(Consumable):
 
@@ -62,29 +62,45 @@ class Novel(Consumable):
     def save(self) -> int:
         self._instantiate_table()
         db = SQLiteDatabaseHandler.get_db()
-        id = db.cursor().execute("""INSERT INTO novels(
-                            id,
-                            name,
-                            major_parts,
-                            minor_parts,
-                            completions,
-                            rating,
-                            start_date,
-                            end_date,
-                            author_id)
-                            VALUES(?,?,?,?,?,?,?,?,?)""", 
-                            (None, 
-                             self.name, 
-                             self.major_parts, 
-                             self.minor_parts, 
-                             self.completions, 
-                             self.rating,
-                             self.start_date.timestamp(),
-                             self.end_date.timestamp() if self.end_date else self.end_date,
-                             self.author.id if self.author else self.author)).lastrowid
+        if self.id is None:
+            # Insert
+            id = db.cursor().execute("""INSERT INTO novels(
+                                id,
+                                name,
+                                major_parts,
+                                minor_parts,
+                                completions,
+                                rating,
+                                start_date,
+                                end_date,
+                                author_id)
+                                VALUES(?,?,?,?,?,?,?,?,?)""", 
+                                (None, 
+                                self.name, 
+                                self.major_parts, 
+                                self.minor_parts, 
+                                self.completions, 
+                                self.rating,
+                                self.start_date.timestamp(),
+                                self.end_date.timestamp() if self.end_date else self.end_date,
+                                self.author.id if self.author else self.author)).lastrowid
+            self.id = id
+        # Update
+        else:
+            db.cursor().execute("""UPDATE novels
+                                SET name = ?, major_parts = ?, minor_parts = ?, completions = ?, rating = ?, start_date = ?, end_date = ?, author_id = ?
+                                WHERE id = ?""", 
+                                (self.name, 
+                                self.major_parts, 
+                                self.minor_parts, 
+                                self.completions, 
+                                self.rating,
+                                self.start_date.timestamp(),
+                                self.end_date.timestamp() if self.end_date else self.end_date,
+                                self.author.id if self.author else self.author,
+                                self.id))
         db.commit()
-        self.id = id
-        return id
+        return self.id
 
     @classmethod
     def find(cls, *args, **kwargs) -> list[Novel]:

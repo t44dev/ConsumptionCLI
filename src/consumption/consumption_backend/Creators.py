@@ -19,7 +19,7 @@ class Creator(DatabaseEntity):
         return super().__eq__(other) and self.first_name == other.first_name and self.last_name == other.last_name
     
     def __str__(self) -> str:
-        return f"{self.__class__.__name__} | {self.first_name} {self.last_name} created with ID: {self.id}"
+        return f"{self.__class__.__name__} | {self.first_name} {self.last_name} with ID: {self.id}"
 
 class Author(Creator):
 
@@ -42,14 +42,14 @@ class Author(Creator):
                                 last_name,
                                 pseudonym)
                                 VALUES(?,?,?,?)""", (None, self.first_name, self.last_name, self.pseudonym)).lastrowid
+            self.id = id
         # Update
         else:
-            id = db.cursor().execute("""UPDATE authors
+            db.cursor().execute("""UPDATE authors
                     SET first_name = ?, last_name = ?, pseudonym = ?
-                    WHERE id = ?""", (self.first_name, self.last_name, self.pseudonym, self.id)).lastrowid
+                    WHERE id = ?""", (self.first_name, self.last_name, self.pseudonym, self.id))
         db.commit()
-        self.id = id
-        return id
+        return self.id
 
     @classmethod
     def find(cls, *args, **kwargs) -> list[Author]:
