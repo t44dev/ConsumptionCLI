@@ -106,6 +106,11 @@ class Novel(Consumable):
         return Novel(*novel_data)
 
     @classmethod
+    def delete(cls, id : int) -> None:
+        cls._instantiate_table()
+        SQLiteDatabaseHandler.get_db().cursor().execute("DELETE FROM novels WHERE id = ?", (id, ))
+
+    @classmethod
     def _instantiate_table(cls) -> None:
         cur = SQLiteDatabaseHandler.get_db().cursor()
         cur.execute("""CREATE TABLE IF NOT EXISTS novels(

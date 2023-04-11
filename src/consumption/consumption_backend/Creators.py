@@ -34,12 +34,19 @@ class Author(Creator):
     def save(self) -> int:
         self._instantiate_table()
         db = SQLiteDatabaseHandler.get_db()
-        id = db.cursor().execute("""INSERT INTO authors(
-                            id,
-                            first_name,
-                            last_name,
-                            pseudonym)
-                            VALUES(?,?,?,?)""", (None, self.first_name, self.last_name, self.pseudonym)).lastrowid
+        # Insert
+        if self.id is None:
+            id = db.cursor().execute("""INSERT INTO authors(
+                                id,
+                                first_name,
+                                last_name,
+                                pseudonym)
+                                VALUES(?,?,?,?)""", (None, self.first_name, self.last_name, self.pseudonym)).lastrowid
+        # Update
+        else:
+            id = db.cursor().execute("""UPDATE authors
+                    SET first_name = ?, last_name = ?, pseudonym = ?
+                    WHERE id = ?""", (self.first_name, self.last_name, self.pseudonym, self.id)).lastrowid
         db.commit()
         self.id = id
         return id
@@ -62,6 +69,13 @@ class Author(Creator):
         cls._instantiate_table()
         author_data = SQLiteDatabaseHandler.get_db().cursor().execute("""SELECT * FROM authors WHERE id = ?""", (id, )).fetchone()
         return Author(*author_data)
+    
+    @classmethod
+    def delete(cls, id : int) -> None:
+        cls._instantiate_table()
+        db = SQLiteDatabaseHandler.get_db()
+        db.cursor().execute("DELETE FROM authors WHERE id = ?", (id, ))
+        db.commit()
 
     @classmethod
     def _instantiate_table(cls) -> None:

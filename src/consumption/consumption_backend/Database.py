@@ -32,6 +32,11 @@ class DatabaseEntity(ABC):
 
     @classmethod
     @abstractmethod
+    def delete(cls, id : int) -> None:
+        pass
+
+    @classmethod
+    @abstractmethod
     def _instantiate_table(cls) -> None:
         pass
 
