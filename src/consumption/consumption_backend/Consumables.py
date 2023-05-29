@@ -118,7 +118,7 @@ class Novel(Consumable):
     @classmethod    
     def get(cls, id : int) -> Novel:
         cls._instantiate_table()
-        novel_data = SQLiteDatabaseHandler.get_db().cursor().execute("""SELECT * FROM novels WHERE nov_id = ?""", (id, )).fetchone()
+        novel_data = SQLiteDatabaseHandler.get_db().cursor().execute("""SELECT * FROM novels WHERE id = ?""", (id, )).fetchone()
         return Novel(*novel_data)
 
     @classmethod

@@ -31,6 +31,8 @@ novel_parser.add_argument("--sd", "--startdate", dest="start_date", action=Subdi
 novel_parser.add_argument("--ed", "--enddate", dest="end_date", action=SubdictAction, default=argparse.SUPPRESS)
 novel_parser.add_argument("-a", "--authorid", dest="author_id", action=SubdictAction, default=argparse.SUPPRESS)
 # Commands
+novel_parser.add_argument("--order", choices=["id", "name", "rating", "completions", "start_date", "end_date"], default="rating")
+novel_parser.add_argument("--reverse", action="store_true")
 novel_parser.add_argument("-r", "--read", dest="read", action="store_true")
 novel_parser.add_argument("-f", "--finish", dest="finish", action="store_true")
 

@@ -7,8 +7,8 @@
         - [x] Consumable
         - [x] Creator
     - [ ] Implement Child Classes
-        - [ ] Author
-        - [ ] Novel
+        - [x] Author
+        - [x] Novel
         - [ ] Comic
         - [ ] Director
         - [ ] Actor
@@ -16,10 +16,11 @@
         - [ ] TV Series
         - [ ] Characters
     - [ ] Refactor
-        - [ ] General DatabaseHandler for usage of multiple DB solutions.
-        - [ ] Don't repeat code across classes for database operations.
-        - [ ] No SQL in non-database classes.
-        - [ ] Staff as parent to creators.
+        - [ ] General DatabaseHandler for usage of multiple DB solutions
+        - [ ] Multiple staff on a Consumable
+        - [ ] Don't repeat code across classes for database operations
+        - [ ] No SQL in non-database classes
+        - [ ] Staff as parent to creators
         - [ ] Advanced find (<, >, <=, >=, = for numerical values)
         - [ ] Advanced find (regex for strings)
     - [ ] Tests
@@ -55,7 +56,6 @@
         - [ ] Watching Movies
         - [ ] Watching TV Series
     - [ ] Allow update to progress
-        - [ ] Update Progress Author
         - [ ] Update Progress Novel
         - [ ] Update Progress Comic
         - [ ] Update Progress Movie

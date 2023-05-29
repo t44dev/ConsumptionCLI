@@ -5,7 +5,6 @@ from ..consumption_backend.Creators import Author
 
 # Author
 def author(parser : ArgumentParser, *args, **kwargs) -> str:
-    print("Args: ", args, "Kwargs: ", kwargs)
     subdict : dict = kwargs["subdict"]
     match kwargs:
         case {"list" : True}:
