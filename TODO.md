@@ -5,39 +5,33 @@
         - [x] DatabaseEntity
         - [x] DatabaseHandler
         - [x] Consumable
-        - [x] Creator
+        - [?] Member
     - [ ] Implement Child Classes
-        - [x] Author
+        - [?] Member
         - [x] Novel
         - [ ] Comic
-        - [ ] Director
-        - [ ] Actor
         - [ ] Movie
         - [ ] TV Series
         - [ ] Characters
     - [ ] Refactor
-        - [ ] General DatabaseHandler for usage of multiple DB solutions
-        - [ ] Multiple staff on a Consumable
+        - [?] General DatabaseHandler for usage of multiple DB solutions
+        - [?] No SQL in non-database classes
+        - [?] Single creator/member with type field
+        - [?] Multiple staff on a Consumable
         - [ ] Don't repeat code across classes for database operations
-        - [ ] No SQL in non-database classes
-        - [ ] Staff as parent to creators
         - [ ] Advanced find (<, >, <=, >=, = for numerical values)
         - [ ] Advanced find (regex for strings)
     - [ ] Tests
-        - [x] Test Author Database Access
+        - [ ] Test Member Database Access
         - [x] Test Novel Database Access
         - [ ] Test Comic Database Access
-        - [ ] Test Director Database Access
-        - [ ] Test Actor Database Access
         - [ ] Test Movie Database Access
         - [ ] Test TV Series Database Access
         - [ ] Test Characters Database Access
     - [ ] Write Docstrings
         - [ ] Database
         - [ ] Novel
-        - [ ] Author
         - [ ] Comic
-        - [ ] Director
         - [ ] Actor
         - [ ] Movie
         - [ ] TV Series
@@ -45,11 +39,7 @@
     - [ ] Export from DB to more standard file format
 - [ ] CLI Frontend
     - [ ] Allow direct access from command-line on all platforms.
-    - [ ] Implement creation and assigning
-        - [ ] Creating/Assigning Author
-        - [ ] Creating/Assigning Director
-        - [ ] Creating/Assigning Actor
-        - [ ] Creating/Assigning Characters
+    - [ ] Implement creation and assigning of member
     - [ ] Implement in progress functionality
         - [ ] Reading Novels
         - [ ] Reading Comic
@@ -61,12 +51,12 @@
         - [ ] Update Progress Movie
         - [ ] Update Progress TV Series
     - [ ] Allow general updates and deletions
-        - [ ] Update/Delete Author
+        - [ ] Create/Update/Delete Member
         - [ ] Update/Delete Novel
         - [ ] Update/Delete Comic
         - [ ] Update/Delete Movie
         - [ ] Update/Delete TV Series
-        - [ ] Update/Delete Actor
-        - [ ] Update/Delete Director
         - [ ] Update/Delete Character
-    - [ ] Subclass ArgumentParser for better Subdict implementation
+    - [ ] Refactor
+        - [ ] Implement stdin reading when too few parameters given
+        - [ ] Subclass ArgumentParser for better Subdict implementation
