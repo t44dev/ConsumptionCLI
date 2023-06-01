@@ -17,12 +17,12 @@ class DatabaseHandler():
 
     @classmethod
     @abstractmethod
-    def find_one(cls, database : str, **fields) -> dict(str, Any):
+    def find_one(cls, database : str, **fields) -> tuple(Any):
         pass
 
     @classmethod
     @abstractmethod
-    def find_many(cls, database : str, **fields) -> list(dict(str, Any)):
+    def find_many(cls, database : str, **fields) -> list(tuple(Any)):
         pass
 
     @classmethod
@@ -182,4 +182,28 @@ class SQLiteTableInstantiator():
             rating REAL,
             start_date REAL NOT NULL,
             end_date REAL)"""
+        sql_staff_mapping = """CREATE TABLE IF NOT EXISTS novel_staff(
+                            staff_id INTEGER NOT NULL,
+                            novel_id INTEGER NOT NULL,
+                            role TEXT,
+                            PRIMARY KEY (staff_id, novel_id)
+                            FOREIGN KEY (staff_id)
+                                REFERENCES staff (id)
+                                ON DELETE CASCADE
+                                ON UPDATE NO ACTION
+                            FOREIGN KEY (novel_id)
+                                REFERENCES novel (id)
+                                ON DELETE CASCADE
+                                ON UPDATE NO ACTION
+                            )"""
+        cls._get_db().cursor().execute(sql)
+        cls._get_db().cursor().execute(sql_staff_mapping)
+
+    @classmethod
+    def staff_table(cls):
+        sql = """CREATE TABLE IF NOT EXISTS staff(
+            id INTEGER PRIMARY KEY NOT NULL,
+            first_name TEXT,
+            last_name TEXT,
+            pseudonym TEXT)"""
         cls._get_db().cursor().execute(sql)

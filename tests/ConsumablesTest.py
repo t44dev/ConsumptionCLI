@@ -7,32 +7,28 @@ db = sqlite3.connect("testdb.db")
 SQLiteDatabaseHandler.DB_CONNECTION = db
 SQLiteTableInstantiator.DB_CONNECTION = db
 
-
 class TestNovel(unittest.TestCase):
 
-    def reset_novel_table(self):
-        db.cursor().execute("DROP TABLE IF EXISTS novels")
+    def setUp(self) -> None:
         SQLiteTableInstantiator.novel_table()
 
+    def tearDown(self) -> None:
+        db.cursor().execute("DROP TABLE IF EXISTS novels")
+
     def test_save(self):
-        self.reset_novel_table()
         novel = cons.Novel(name="To Kill a Mockingbird")
         id = novel.save()
-        novel.id = id
         self.assertIsNotNone(id)
         get_novel = cons.Novel.get(id)
         self.assertEqual(novel, get_novel)
     
     def test_get(self):
-        self.reset_novel_table()
         novel = cons.Novel(name="Minecraft: Guide to Redstone")
         id = novel.save()
-        novel.id = id
         get_novel = cons.Novel.get(id)
         self.assertEqual(novel, get_novel)
 
     def test_find(self):
-        self.reset_novel_table()
         # Found Novels
         fnovel1 = cons.Novel(name="It", completions=3, rating=5.3)
         fnovel1.id = fnovel1.save()

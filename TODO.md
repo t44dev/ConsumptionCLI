@@ -5,9 +5,8 @@
         - [x] DatabaseEntity
         - [x] DatabaseHandler
         - [x] Consumable
-        - [?] Member
     - [ ] Implement Child Classes
-        - [?] Member
+        - [x] Staff
         - [x] Novel
         - [ ] Comic
         - [ ] Movie
@@ -15,14 +14,15 @@
         - [ ] Characters
     - [ ] Refactor
         - [x] General DatabaseHandler for usage of multiple DB solutions
-        - [?] No SQL in non-database classes
-        - [?] Single creator/member with type field
-        - [?] Multiple staff on a Consumable
+        - [x] No SQL in non-database classes
+        - [x] Single staff with role field
+        - [x] Multiple staff on a Consumable
         - [ ] Don't repeat code across classes for database operations
         - [ ] Advanced find (<, >, <=, >=, = for numerical values)
         - [ ] Advanced find (regex for strings)
     - [ ] Tests
-        - [ ] Test Member Database Access
+        - [x] Test SQLiteDatabaseHandler
+        - [x] Test Staff Database Access
         - [x] Test Novel Database Access
         - [ ] Test Comic Database Access
         - [ ] Test Movie Database Access
@@ -39,7 +39,7 @@
     - [ ] Export from DB to more standard file format
 - [ ] CLI Frontend
     - [ ] Allow direct access from command-line on all platforms.
-    - [ ] Implement creation and assigning of member
+    - [ ] Implement creation and assigning of staff
     - [ ] Implement in progress functionality
         - [ ] Reading Novels
         - [ ] Reading Comic
@@ -51,7 +51,7 @@
         - [ ] Update Progress Movie
         - [ ] Update Progress TV Series
     - [ ] Allow general updates and deletions
-        - [ ] Create/Update/Delete Member
+        - [ ] Create/Update/Delete Staff
         - [ ] Update/Delete Novel
         - [ ] Update/Delete Comic
         - [ ] Update/Delete Movie

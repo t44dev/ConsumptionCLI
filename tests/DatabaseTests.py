@@ -4,10 +4,15 @@ import sqlite3
 
 db = sqlite3.connect("testdb.db")
 SQLiteDatabaseHandler.DB_CONNECTION = db
-db.cursor().execute("CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY NOT NULL, value TEXT)")
 
 class TestSQLiteDatabaseHandler(unittest.TestCase):
 
+    def setUp(self) -> None:
+        db.cursor().execute("CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY NOT NULL, value TEXT)")
+    
+    def tearDown(self) -> None:
+        db.cursor().execute("DROP TABLE test")
+        
     def test_insert_findone(self):
         input = "Hello World!"
         SQLiteDatabaseHandler.insert("test", id=101, value=input)
