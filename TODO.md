@@ -14,7 +14,7 @@
         - [ ] TV Series
         - [ ] Characters
     - [ ] Refactor
-        - [?] General DatabaseHandler for usage of multiple DB solutions
+        - [x] General DatabaseHandler for usage of multiple DB solutions
         - [?] No SQL in non-database classes
         - [?] Single creator/member with type field
         - [?] Multiple staff on a Consumable

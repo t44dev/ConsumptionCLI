@@ -1,17 +1,21 @@
 import consumption.consumption_backend.Consumables as cons
-from consumption.consumption_backend.Database import SQLiteDatabaseHandler
+from consumption.consumption_backend.Database import SQLiteDatabaseHandler, SQLiteTableInstantiator
 import sqlite3
 import unittest
 
-SQLiteDatabaseHandler.DB_CONNECTION = sqlite3.connect("testdb.db")
+db = sqlite3.connect("testdb.db")
+SQLiteDatabaseHandler.DB_CONNECTION = db
+SQLiteTableInstantiator.DB_CONNECTION = db
+
 
 class TestNovel(unittest.TestCase):
 
-    def drop_novel_table(self):
-        SQLiteDatabaseHandler.get_db().cursor().execute("DROP TABLE IF EXISTS novels")
+    def reset_novel_table(self):
+        db.cursor().execute("DROP TABLE IF EXISTS novels")
+        SQLiteTableInstantiator.novel_table()
 
     def test_save(self):
-        self.drop_novel_table()
+        self.reset_novel_table()
         novel = cons.Novel(name="To Kill a Mockingbird")
         id = novel.save()
         novel.id = id
@@ -20,7 +24,7 @@ class TestNovel(unittest.TestCase):
         self.assertEqual(novel, get_novel)
     
     def test_get(self):
-        self.drop_novel_table()
+        self.reset_novel_table()
         novel = cons.Novel(name="Minecraft: Guide to Redstone")
         id = novel.save()
         novel.id = id
@@ -28,7 +32,7 @@ class TestNovel(unittest.TestCase):
         self.assertEqual(novel, get_novel)
 
     def test_find(self):
-        self.drop_novel_table()
+        self.reset_novel_table()
         # Found Novels
         fnovel1 = cons.Novel(name="It", completions=3, rating=5.3)
         fnovel1.id = fnovel1.save()
@@ -41,7 +45,7 @@ class TestNovel(unittest.TestCase):
         novel.save()
         novel = cons.Novel(name="Carrie", completions=0, rating=5.3)
         novel.save()
-        find_novels = cons.Novel.find(nov_completions=3, nov_rating=5.3)
+        find_novels = cons.Novel.find(completions=3, rating=5.3)
         f_novels = [fnovel1, fnovel2, fnovel3]
         self.assertTrue(len(find_novels) == len(f_novels))
         for novel in f_novels:
