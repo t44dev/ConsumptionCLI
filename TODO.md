@@ -5,58 +5,36 @@
         - [x] DatabaseEntity
         - [x] DatabaseHandler
         - [x] Consumable
-    - [ ] Implement Child Classes
-        - [x] Staff
-        - [x] Novel
-        - [ ] Comic
-        - [ ] Movie
-        - [ ] TV Series
-        - [ ] Characters
+    - [x] Implement Child Classes
     - [ ] Refactor
         - [x] General DatabaseHandler for usage of multiple DB solutions
         - [x] No SQL in non-database classes
         - [x] Single staff with role field
         - [x] Multiple staff on a Consumable
-        - [ ] Don't repeat code across classes for database operations
+        - [x] Don't repeat code across classes for database operations
         - [ ] Advanced find (<, >, <=, >=, = for numerical values)
         - [ ] Advanced find (regex for strings)
-    - [ ] Tests
-        - [x] Test SQLiteDatabaseHandler
-        - [x] Test Staff Database Access
-        - [x] Test Novel Database Access
-        - [ ] Test Comic Database Access
-        - [ ] Test Movie Database Access
-        - [ ] Test TV Series Database Access
-        - [ ] Test Characters Database Access
+    - [x] Tests
     - [ ] Write Docstrings
-        - [ ] Database
-        - [ ] Novel
-        - [ ] Comic
-        - [ ] Actor
-        - [ ] Movie
-        - [ ] TV Series
-        - [ ] Characters
     - [ ] Export from DB to more standard file format
 - [ ] CLI Frontend
     - [ ] Allow direct access from command-line on all platforms.
-    - [ ] Implement creation and assigning of staff
-    - [ ] Implement in progress functionality
-        - [ ] Reading Novels
-        - [ ] Reading Comic
-        - [ ] Watching Movies
-        - [ ] Watching TV Series
-    - [ ] Allow update to progress
-        - [ ] Update Progress Novel
-        - [ ] Update Progress Comic
-        - [ ] Update Progress Movie
-        - [ ] Update Progress TV Series
+    - [x] Implement in progress functionality
+    - [x] Allow update to progress
     - [ ] Allow general updates and deletions
-        - [ ] Create/Update/Delete Staff
-        - [ ] Update/Delete Novel
-        - [ ] Update/Delete Comic
-        - [ ] Update/Delete Movie
-        - [ ] Update/Delete TV Series
-        - [ ] Update/Delete Character
+        - [x] Update general fields that don't require processing
+        - [ ] Update dates
+        - [ ] Append/Remove staff
     - [ ] Refactor
         - [ ] Implement stdin reading when too few parameters given
+        - [ ] Change in progress implementation for better use on re-completion
         - [ ] Subclass ArgumentParser for better Subdict implementation
+- [ ] General
+    - [ ] Implement Novel
+    - [ ] Implement Movie
+    - [ ] Implement Comic
+    - [ ] Implement TV Series
+    - [ ] Implement Character Assignment?
+    - [ ] Migrate backend to new repo
+    - [ ] Bugs/Errors/TODO
+            - [ ] Cant finish consumable without iterate flag set
