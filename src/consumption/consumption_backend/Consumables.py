@@ -9,6 +9,9 @@ from .Staff import Staff
 
 class Consumable(DatabaseEntity):
     
+    MAJOR_PART_NAME = "MAJOR"
+    MINOR_PART_NAME = "MINOR"
+
     def __init__(self, \
                 database : str, \
                 id : Union[int, None] = None, \
@@ -47,6 +50,7 @@ class Consumable(DatabaseEntity):
         self.db_handler.insert(database, staff_id=id, role=role, **kwargs)
 
     def save(self, **kwargs) -> int:
+        print('cons_save', self, kwargs)
         start_date = self.start_date.timestamp()
         end_date = self.end_date.timestamp() if self.end_date else None
         return super().save(name=self.name, \
@@ -102,6 +106,7 @@ class Novel(Consumable):
     @classmethod    
     def get(cls, id : int) -> Novel:
         novel_data = cls.db_handler.find_one(cls.DATABASE_NAME, id=id)
+        print('novel_get', novel_data)
         return Novel(*novel_data)
 
     @classmethod

@@ -10,7 +10,7 @@ import sqlite3
 # Package Imports
 from .path_handling import CONFIG_PATH
 
-class DatabaseHandler():
+class DatabaseHandler(ABC):
 
     def __init__(self) -> None:
         pass
@@ -57,27 +57,38 @@ class SQLiteDatabaseHandler(DatabaseHandler):
         return cls.DB_CONNECTION
     
     @classmethod
-    def _sql_fields_str_builder(cls, fields : dict[str, Any]) -> tuple(str, list(Any)):
+    def _sql_where_str_builder(cls, fields : dict[str, Any]) -> tuple(str, list(Any)):
         keys = list(fields.keys())
         values = [fields[key] for key in keys]
         sql = ""
         if len(values) > 0:
-            sql += f" {keys[0]} = ? "
+            sql += f" WHERE {keys[0]} = ? "
             for i in range(1, len(values)):
                 sql += f"AND {keys[i]} = ? "
+        return sql, values
+    
+    @classmethod
+    def _sql_set_str_builder(cls, fields : dict[str, Any]) -> tuple(str, list(Any)):
+        keys = list(fields.keys())
+        values = [fields[key] for key in keys]
+        sql = ""
+        if len(values) > 0:
+            sql += f" SET {keys[0]} = ?"
+            for i in range(1, len(values)):
+                sql += f", {keys[i]} = ?"
         return sql, values
 
     @classmethod
     def find_one(cls, database, **fields) -> tuple(Any):
-        sql, values = cls._sql_fields_str_builder(fields)
-        sql = f"SELECT * from {database} WHERE" + sql
+        sql, values = cls._sql_where_str_builder(fields)
+        sql = f"SELECT * from {database}" + sql
         result = cls._get_db().cursor().execute(sql, values).fetchone()
         return result
 
     @classmethod
     def find_many(cls, database, **fields) -> list(tuple(Any)):
-        sql, values = cls._sql_fields_str_builder(fields)
-        sql = f"SELECT * from {database} WHERE" + sql
+        sql, values = cls._sql_where_str_builder(fields)
+        sql = f"SELECT * from {database}" + sql
         results = cls._get_db().cursor().execute(sql, values).fetchall()
         return results
 
@@ -85,8 +96,8 @@ class SQLiteDatabaseHandler(DatabaseHandler):
     def delete(cls, database, **fields) -> bool:
         db = cls._get_db()
         cursor = db.cursor()
-        sql, values = cls._sql_fields_str_builder(fields)
-        sql = f"DELETE FROM {database} WHERE" + sql
+        sql, values = cls._sql_where_str_builder(fields)
+        sql = f"DELETE FROM {database}" + sql
         cursor.execute(sql, values)
         db.commit()
         return cursor.rowcount > 0
@@ -95,9 +106,9 @@ class SQLiteDatabaseHandler(DatabaseHandler):
     def update(cls, database : str, setfields, **condfields) -> bool:
         db = cls._get_db()
         cursor = db.cursor()
-        setsql, setvalues = cls._sql_fields_str_builder(setfields)
-        wheresql, wherevalues = cls._sql_fields_str_builder(condfields)
-        sql = f"UPDATE {database} SET" + setsql + "WHERE" + wheresql
+        setsql, setvalues = cls._sql_set_str_builder(setfields)
+        wheresql, wherevalues = cls._sql_where_str_builder(condfields)
+        sql = f"UPDATE {database}" + setsql + wheresql
         values = setvalues + wherevalues
         cursor.execute(sql, values)
         db.commit()
