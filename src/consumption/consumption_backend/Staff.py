@@ -2,8 +2,6 @@
 from __future__ import annotations # For self-referential type-hints
 from typing import Union
 
-from consumption.consumption_backend.Database import DatabaseEntity
-
 # Package Imports
 from .Database import DatabaseEntity
 
