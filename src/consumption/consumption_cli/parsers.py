@@ -39,7 +39,7 @@ novel_parser.add_argument("-c", "--chapter", type=int, dest="minor_parts", actio
 novel_parser.add_argument("--rate", "--rating", type=float, dest="rating", action=SubdictAction, default=argparse.SUPPRESS)
 novel_parser.add_argument("--sd", "--startdate", dest="start_date", action=SubdictAction, default=argparse.SUPPRESS)
 novel_parser.add_argument("--ed", "--enddate", dest="end_date", action=SubdictAction, default=argparse.SUPPRESS)
-novel_parser.add_argument("-s", "--staffid", dest="staff_id", action=SubdictAction, default=argparse.SUPPRESS)
+novel_parser.add_argument("-S", "-staff", dest="staff", nargs='*', default=[])
 # Commands
 novel_parser.add_argument("--order", choices=["id", "name", "rating", "completions", "start_date", "end_date"], default="rating")
 novel_parser.add_argument("--reverse", action="store_true")

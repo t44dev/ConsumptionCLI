@@ -59,8 +59,11 @@ class TestStaff(unittest.TestCase):
         author3.save()
         novel = Novel(name="Book")
         novel.save()
-        novel.add_staff(author1.id, "Author")
-        novel.add_staff(author2.id, "Illustrator")
+        novel.toggle_staff(author1.id, "Author")
+        novel.toggle_staff(author2.id, "Illustrator")
+        # 2 toggles should result in no change
+        novel.toggle_staff(author3.id, "Fake")
+        novel.toggle_staff(author3.id, "Fake")
         for i in range(len(novel.staff)):
             with self.subTest(i=i):
                 staff = novel.staff[i]

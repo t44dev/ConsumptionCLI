@@ -82,9 +82,32 @@ class CLIHandler(ABC):
 class ConsumableHandler(CLIHandler):
     
     @classmethod
+    def add_staff(cls, ent : Consumable, staff_list : list[str]):
+        if len(staff_list) % 2 != 0:
+            raise ArgumentError(None, "Staff arguments must be passed in id, Role pairs. e.g. -S 2 Author 3 Illustrator.")
+        try:
+            staff_list = [(int(staff_list[i]), staff_list[i+1]) for i in range(0, len(staff_list), 2)]
+            for staff in staff_list:
+                ent.toggle_staff(staff[0], staff[1])
+        except ValueError:
+            raise ArgumentError(None, "Staff arguments must be passed in id, Role pairs. e.g. -S 2 Author 3 Illustrator.")
+        except TypeError:
+            raise ArgumentError(None, "Staff id must exist within the database.")
+
+
+
+    @classmethod
+    def cli_create(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
+        try:
+            instance = ent(**subdict)
+        except TypeError:
+            raise ArgumentError(None, "Could not instanitate specified entity.")
+        instance.save()
+        cls.add_staff(instance, kwargs["staff"])
+        return str(instance)
+
+    @classmethod
     def cli_update(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
-        if not kwargs["increment"]:
-            return super().cli_update(ent, subdict, **kwargs)
         instance = cls.get_ent(ent, subdict)
         # Add Volumes, Chapters, set End Date
         inc_major_parts = subdict.pop("major_parts") if "major_parts" in subdict else 0
@@ -104,6 +127,7 @@ class ConsumableHandler(CLIHandler):
         for key, value in subdict.items():
             setattr(instance, key, value)
         instance.save()
+        cls.add_staff(instance, kwargs["staff"])
         return str(instance)
     
     @classmethod

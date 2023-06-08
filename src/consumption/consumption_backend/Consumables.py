@@ -20,7 +20,7 @@ class Consumable(DatabaseEntity):
                 minor_parts : int = 0, \
                 completions : int = 0, \
                 rating : Union[float, None] = None, \
-                start_date : float = datetime.utcnow().timestamp(), \
+                start_date : float = None, \
                 end_date : Union[float, None] = None, \
                 staff : list[Staff] = None) -> None:
         super().__init__(database, id)
@@ -31,7 +31,7 @@ class Consumable(DatabaseEntity):
         self.rating = rating
         self.staff = [] if staff is None else staff
         # Using posix-timestamp
-        self.start_date = datetime.fromtimestamp(start_date)
+        self.start_date = datetime.fromtimestamp(start_date) if start_date else datetime.utcnow()
         self.end_date = datetime.fromtimestamp(end_date) if end_date else end_date
         if self.id is not None:
             self.populate_staff()
@@ -43,7 +43,14 @@ class Consumable(DatabaseEntity):
             staff.role = role
             self.staff.append(staff) 
 
-    def add_staff(self, database : str, id : int, role : str, **kwargs) -> None:
+    def toggle_staff(self, database : str, id : int, role : str, **kwargs) -> None:
+        for i, staff in enumerate(self.staff):
+            if staff.id == id and staff.role == role:
+                # Remove Staff
+                self.staff.pop(i)
+                self.db_handler.delete(database, staff_id=id, role=role, **kwargs)
+                return
+        # Else Add Staff
         staff = Staff.get(id)
         staff.role = role
         self.staff.append(staff)
@@ -94,8 +101,8 @@ class Novel(Consumable):
     def populate_staff(self) -> None:
         return super().populate_staff("novel_staff", novel_id=self.id)
 
-    def add_staff(self, id: int, role: str) -> None:
-        return super().add_staff("novel_staff", id, role, novel_id=self.id)
+    def toggle_staff(self, id: int, role: str) -> None:
+        return super().toggle_staff("novel_staff", id, role, novel_id=self.id)
 
     @classmethod
     def find(cls, **kwargs) -> list[Novel]:

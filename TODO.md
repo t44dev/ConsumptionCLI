@@ -3,15 +3,15 @@
 #### High Priority
 - [ ] Migrate backend to new repo
 - [ ] Novel/Movie/Comic/TV Series
-- [ ] Append/Remove staff
 - [ ] Update dates
 - [ ] Allow direct access from command-line on all platforms.
 - [ ] Consumable Status: Planning/In Progress/On Hold/Finished/Rewatching/Reading
+- [ ] Consider using only generalized Consumable instead of subclasses
 #### Medium Priority
 - [ ] Search consumables by staff
 - [ ] Tags
-- [ ] Consider using only generalized Consumable instead of subclasses
 - [ ] Brainstorm more sensible re-completion flow
+- [ ] Staff list contains consumable information, e.g. count
 #### Low Priority
 - [ ] Characters & Character assignment
 - [ ] Docstrings
@@ -24,19 +24,24 @@
 
 
 ### Finished
-- [x] Update general fields that don't require processing
-- [x] In progress functionality
-- [x] Allow update to progress
-- [x] General DatabaseHandler for usage of multiple DB solutions
-- [x] No SQL in non-database classes
-- [x] Single staff with role field
-- [x] Multiple staff on a Consumable
-- [x] Don't repeat code across classes for database operations
-- [x] Novel Tests
-- [x] Database Tests
-- [x] Staff Tests
-- [x] DatabaseEntity
-- [x] DatabaseHandler
-- [x] Consumable
-- [x] Novel Backend
-- [x] Staff Backend
+- [x] Features
+    - [x] Append/Remove staff
+    - [x] Multiple staff on a Consumable
+    - [x] Single staff class with role field
+    - [x] Allow update to progress
+    - [x] In progress functionality
+    - [x] Update general fields that don't require processing
+- [x] Code Cleanliness
+    - [x] Don't repeat code across classes for database operations
+    - [x] No SQL in non-database classes
+    - [x] General DatabaseHandler for usage of multiple DB solutions
+- [x] Tests
+    - [x] Novel Tests
+    - [x] Database Tests
+    - [x] Staff Tests
+- [x] Basic Backend Classes
+    - [x] DatabaseEntity
+    - [x] DatabaseHandler
+    - [x] Consumable
+    - [x] Novel Backend
+    - [x] Staff Backend
