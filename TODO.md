@@ -1,40 +1,42 @@
 # TODO LIST
+### Features
+#### High Priority
+- [ ] Migrate backend to new repo
+- [ ] Novel/Movie/Comic/TV Series
+- [ ] Append/Remove staff
+- [ ] Update dates
+- [ ] Allow direct access from command-line on all platforms.
+- [ ] Consumable Status: Planning/In Progress/On Hold/Finished/Rewatching/Reading
+#### Medium Priority
+- [ ] Search consumables by staff
+- [ ] Tags
+- [ ] Consider using only generalized Consumable instead of subclasses
+- [ ] Brainstorm more sensible re-completion flow
+#### Low Priority
+- [ ] Characters & Character assignment
+- [ ] Docstrings
+- [ ] Subclass ArgumentParser for better Subdict action
+- [ ] stdin reading when too few parameters given
+- [ ] Advanced find (regex for strings)
+- [ ] Advanced find (<, >, <=, >=, = for numerical values)
+### Bugs/Problems
+- [ ] Cant finish consumable without iterate flag set
 
-- [ ] Backend Development
-    - [x] Implement Base Abstract Classes
-        - [x] DatabaseEntity
-        - [x] DatabaseHandler
-        - [x] Consumable
-    - [x] Implement Child Classes
-    - [ ] Refactor
-        - [x] General DatabaseHandler for usage of multiple DB solutions
-        - [x] No SQL in non-database classes
-        - [x] Single staff with role field
-        - [x] Multiple staff on a Consumable
-        - [x] Don't repeat code across classes for database operations
-        - [ ] Advanced find (<, >, <=, >=, = for numerical values)
-        - [ ] Advanced find (regex for strings)
-    - [x] Tests
-    - [ ] Write Docstrings
-    - [ ] Export from DB to more standard file format
-- [ ] CLI Frontend
-    - [ ] Allow direct access from command-line on all platforms.
-    - [x] Implement in progress functionality
-    - [x] Allow update to progress
-    - [ ] Allow general updates and deletions
-        - [x] Update general fields that don't require processing
-        - [ ] Update dates
-        - [ ] Append/Remove staff
-    - [ ] Refactor
-        - [ ] Implement stdin reading when too few parameters given
-        - [ ] Change in progress implementation for better use on re-completion
-        - [ ] Subclass ArgumentParser for better Subdict implementation
-- [ ] General
-    - [ ] Implement Novel
-    - [ ] Implement Movie
-    - [ ] Implement Comic
-    - [ ] Implement TV Series
-    - [ ] Implement Character Assignment?
-    - [ ] Migrate backend to new repo
-    - [ ] Bugs/Errors/TODO
-            - [ ] Cant finish consumable without iterate flag set
+
+### Finished
+- [x] Update general fields that don't require processing
+- [x] In progress functionality
+- [x] Allow update to progress
+- [x] General DatabaseHandler for usage of multiple DB solutions
+- [x] No SQL in non-database classes
+- [x] Single staff with role field
+- [x] Multiple staff on a Consumable
+- [x] Don't repeat code across classes for database operations
+- [x] Novel Tests
+- [x] Database Tests
+- [x] Staff Tests
+- [x] DatabaseEntity
+- [x] DatabaseHandler
+- [x] Consumable
+- [x] Novel Backend
+- [x] Staff Backend
