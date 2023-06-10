@@ -183,27 +183,33 @@ class SQLiteTableInstantiator():
         return cls.DB_CONNECTION
 
     @classmethod
-    def novel_table(cls):
-        sql = """CREATE TABLE IF NOT EXISTS novels(
+    def run(cls):
+        cls.staff_table()
+        cls.consumable_table()
+
+    @classmethod
+    def consumable_table(cls):
+        sql = """CREATE TABLE IF NOT EXISTS consumables(
             id INTEGER PRIMARY KEY NOT NULL UNIQUE DEFAULT 0,
             name TEXT NOT NULL,
+            type TEXT NOT NULL,
             major_parts INTEGER NOT NULL DEFAULT 0,
             minor_parts INTEGER NOT NULL DEFAULT 0,
             completions INTEGER NOT NULL DEFAULT 0,
             rating REAL,
             start_date REAL NOT NULL,
             end_date REAL)"""
-        sql_staff_mapping = """CREATE TABLE IF NOT EXISTS novel_staff(
+        sql_staff_mapping = """CREATE TABLE IF NOT EXISTS consumable_staff(
                             staff_id INTEGER NOT NULL,
-                            novel_id INTEGER NOT NULL,
+                            consumable_id INTEGER NOT NULL,
                             role TEXT,
-                            PRIMARY KEY (staff_id, novel_id)
+                            PRIMARY KEY (staff_id, consumable_id)
                             FOREIGN KEY (staff_id)
                                 REFERENCES staff (id)
                                 ON DELETE CASCADE
                                 ON UPDATE NO ACTION
-                            FOREIGN KEY (novel_id)
-                                REFERENCES novel (id)
+                            FOREIGN KEY (consumable_id)
+                                REFERENCES consumables (id)
                                 ON DELETE CASCADE
                                 ON UPDATE NO ACTION
                             )"""

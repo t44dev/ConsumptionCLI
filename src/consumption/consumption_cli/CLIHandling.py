@@ -7,7 +7,7 @@ from tabulate import tabulate
 
 # Package Imports
 from consumption.consumption_backend.Database import DatabaseEntity
-from consumption.consumption_backend.Consumables import Consumable, Staff
+from consumption.consumption_backend.Consumable import Consumable, Staff
 
 T = TypeVar("T", DatabaseEntity, Consumable, Staff)
 

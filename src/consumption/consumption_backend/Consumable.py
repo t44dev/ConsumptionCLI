@@ -9,13 +9,15 @@ from .Staff import Staff
 
 class Consumable(DatabaseEntity):
     
-    MAJOR_PART_NAME = "MAJOR"
-    MINOR_PART_NAME = "MINOR"
+    MAJOR_PART_NAME = "Major"
+    MINOR_PART_NAME = "Minor"
+    DB_NAME = "consumables"
+    DB_STAFF_MAPPING_NAME = "consumable_staff"
 
     def __init__(self, \
-                database : str, \
                 id : Union[int, None] = None, \
                 name : str = "", \
+                type : str = "", \
                 major_parts : int = 0, \
                 minor_parts : int = 0, \
                 completions : int = 0, \
@@ -23,8 +25,9 @@ class Consumable(DatabaseEntity):
                 start_date : float = None, \
                 end_date : Union[float, None] = None, \
                 staff : list[Staff] = None) -> None:
-        super().__init__(database, id)
+        super().__init__(self.DB_NAME, id)
         self.name = name
+        self.type = type
         self.major_parts = major_parts
         self.minor_parts = minor_parts
         self.completions = completions
@@ -36,28 +39,43 @@ class Consumable(DatabaseEntity):
         if self.id is not None:
             self.populate_staff()
     
-    def populate_staff(self, database : str, **kwargs) -> None:
-        mappings = self.db_handler.find_many(database, **kwargs)
+    def populate_staff(self, **kwargs) -> None:
+        mappings = self.db_handler.find_many(self.DB_STAFF_MAPPING_NAME, **kwargs)
         for staff_id, _, role in mappings:
             staff = Staff.get(staff_id)
             staff.role = role
-            self.staff.append(staff) 
+            self.staff.append(staff)
 
-    def toggle_staff(self, database : str, id : int, role : str, **kwargs) -> None:
+    def toggle_staff(self, id : int, role : str) -> None:
         for i, staff in enumerate(self.staff):
             if staff.id == id and staff.role == role:
                 # Remove Staff
                 self.staff.pop(i)
-                self.db_handler.delete(database, staff_id=id, role=role, **kwargs)
+                self.db_handler.delete(self.DB_STAFF_MAPPING_NAME, consumable_id=self.id, staff_id=id, role=role)
                 return
         # Else Add Staff
         staff = Staff.get(id)
         staff.role = role
         self.staff.append(staff)
-        self.db_handler.insert(database, staff_id=id, role=role, **kwargs)
+        self.db_handler.insert(self.DB_STAFF_MAPPING_NAME, consumable_id=self.id, staff_id=id, role=role)
+
+    @classmethod
+    def find(cls, **kwargs) -> list[Consumable]:
+        consumables = cls.db_handler.find_many(cls.DB_NAME, **kwargs)
+        return [Consumable(*data) for data in consumables]
+
+    @classmethod    
+    def get(cls, id : int) -> Consumable:
+        data = cls.db_handler.find_one(cls.DB_NAME, id=id)
+        return Consumable(*data)
+
+    @classmethod
+    def delete(cls, id : int) -> None:
+        super().delete(cls.DB_NAME, id)
 
     def save(self, **kwargs) -> int:
         return super().save(name=self.name, \
+                            type=self.type, \
                             major_parts=self.major_parts, \
                             minor_parts=self.minor_parts, \
                             completions=self.completions, \
@@ -78,40 +96,3 @@ class Consumable(DatabaseEntity):
     
     def __str__(self) -> str:
         return f"{self.__class__.__name__} | {self.name} with ID: {self.id}"
-
-class Novel(Consumable):
-
-    MAJOR_PART_NAME = "Volume"
-    MINOR_PART_NAME = "Chapter"
-    DATABASE_NAME = "novels"
-
-    def __init__(self, 
-                id : Union[int, None] = None, \
-                name : str = "", \
-                major_parts : int = 0, \
-                minor_parts : int = 0, \
-                completions : int = 0, \
-                rating : Union[float, None] = None, \
-                start_date : float = None, \
-                end_date : Union[float, None] = None) -> None:
-        super().__init__(Novel.DATABASE_NAME, id, name, major_parts, minor_parts, completions, rating, start_date, end_date)
-
-    def populate_staff(self) -> None:
-        return super().populate_staff("novel_staff", novel_id=self.id)
-
-    def toggle_staff(self, id: int, role: str) -> None:
-        return super().toggle_staff("novel_staff", id, role, novel_id=self.id)
-
-    @classmethod
-    def find(cls, **kwargs) -> list[Novel]:
-        novels = cls.db_handler.find_many(cls.DATABASE_NAME, **kwargs)
-        return [Novel(*novel_data) for novel_data in novels]
-
-    @classmethod    
-    def get(cls, id : int) -> Novel:
-        novel_data = cls.db_handler.find_one(cls.DATABASE_NAME, id=id)
-        return Novel(*novel_data)
-
-    @classmethod
-    def delete(cls, id : int) -> None:
-        super().delete(cls.DATABASE_NAME, id)

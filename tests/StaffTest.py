@@ -1,5 +1,5 @@
 from consumption.consumption_backend.Staff import Staff
-from consumption.consumption_backend.Consumables import Novel
+from consumption.consumption_backend.Consumable import Consumable
 from consumption.consumption_backend.Database import SQLiteDatabaseHandler, SQLiteTableInstantiator
 import sqlite3
 import unittest
@@ -12,11 +12,11 @@ class TestStaff(unittest.TestCase):
 
     def setUp(self) -> None:
         SQLiteTableInstantiator.staff_table()
-        SQLiteTableInstantiator.novel_table()
+        SQLiteTableInstantiator.consumable_table()
 
     def tearDown(self) -> None:
         db.cursor().execute("DROP TABLE IF EXISTS staff")
-        db.cursor().execute("DROP TABLE IF EXISTS novel_staff")
+        db.cursor().execute("DROP TABLE IF EXISTS consumable_staff")
 
     def test_save(self):
         author = Staff(first_name="John", last_name="Doe", pseudonym="SavedAuthor")
@@ -57,21 +57,21 @@ class TestStaff(unittest.TestCase):
         author1.save()
         author2.save()
         author3.save()
-        novel = Novel(name="Book")
-        novel.save()
-        novel.toggle_staff(author1.id, "Author")
-        novel.toggle_staff(author2.id, "Illustrator")
+        cons = Consumable(name="Book")
+        cons.save()
+        cons.toggle_staff(author1.id, "Author")
+        cons.toggle_staff(author2.id, "Illustrator")
         # 2 toggles should result in no change
-        novel.toggle_staff(author3.id, "Fake")
-        novel.toggle_staff(author3.id, "Fake")
-        for i in range(len(novel.staff)):
+        cons.toggle_staff(author3.id, "Fake")
+        cons.toggle_staff(author3.id, "Fake")
+        for i in range(len(cons.staff)):
             with self.subTest(i=i):
-                staff = novel.staff[i]
+                staff = cons.staff[i]
                 self.assertTrue(staff == author1 or staff == author2)
-        get_novel = Novel.get(novel.id)
-        for i in range(len(get_novel.staff)):
+        get_cons = Consumable.get(cons.id)
+        for i in range(len(get_cons.staff)):
             with self.subTest(i=i):
-                staff = get_novel.staff[i]
+                staff = get_cons.staff[i]
                 self.assertTrue(staff == author1 or staff == author2)
 
 if __name__ == '__main__':
