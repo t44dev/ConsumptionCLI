@@ -1,8 +1,6 @@
 # TODO LIST
 ### Features
 #### High Priority
-- [ ] Consumable Status: Planning/In Progress/On Hold/Finished/Rewatching/Reading
-- [ ] Novel/Movie/Comic/TV Series
 - [ ] Migrate backend to new repo
 - [ ] Allow direct access from command-line on all platforms.
 #### Medium Priority
@@ -22,6 +20,7 @@
 ### Finished
 - [x] Features
     - [x] Consider using only generalized Consumable instead of subclasses - Implemented this method
+    - [x] Consumable Status: Planning/In Progress/On Hold/Finished/Rewatching/Reading
     - [x] Append/Remove staff
     - [x] Multiple staff on a Consumable
     - [x] Single staff class with role field

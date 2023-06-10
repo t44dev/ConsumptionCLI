@@ -7,7 +7,8 @@ from tabulate import tabulate
 
 # Package Imports
 from consumption.consumption_backend.Database import DatabaseEntity
-from consumption.consumption_backend.Consumable import Consumable, Staff
+from consumption.consumption_backend.Consumable import Consumable, Status
+from consumption.consumption_backend.Staff import Staff
 
 T = TypeVar("T", DatabaseEntity, Consumable, Staff)
 
@@ -31,24 +32,11 @@ class CLIHandler(ABC):
                 return cls.cli_noaction(ent, subdict, **kwargs)
 
     @classmethod
-    @abstractmethod
-    def cli_list(cls, ent : Type[DatabaseEntity], subdict : dict, **kwargs) -> str:
-        raise ArgumentError(None, "Please specify an entity to list.")
-
-    @classmethod
     def get_list_ents(cls, ent : Type[T], subdict : dict, **kwargs) -> list[T]:
         sortkey =  kwargs["order"]
         # Thanks to Andrew Clark for solution to sorting list with NoneTypes https://stackoverflow.com/a/18411610
         return sorted(ent.find(**subdict), key = lambda a : (getattr(a, sortkey) is not None, getattr(a, sortkey)), reverse=kwargs["reverse"])
 
-    @classmethod
-    def cli_update(cls, ent : Type[DatabaseEntity], subdict : dict, **kwargs) -> str:
-        instance = cls.get_ent(ent, subdict)
-        for key, value in subdict.items():
-            setattr(instance, key, value)
-        instance.save()
-        return str(instance)
-    
     @classmethod
     def get_ent(cls, ent : Type[T], subdict : dict) -> T:
         if "id" not in subdict:
@@ -58,6 +46,19 @@ class CLIHandler(ABC):
         except TypeError:
             raise ArgumentError(None, f"Author with ID {subdict['id']} not found.")
         return instance
+
+    @classmethod
+    @abstractmethod
+    def cli_list(cls, ent : Type[DatabaseEntity], subdict : dict, **kwargs) -> str:
+        raise ArgumentError(None, "Please specify an entity to list.")
+
+    @classmethod
+    def cli_update(cls, ent : Type[DatabaseEntity], subdict : dict, **kwargs) -> str:
+        instance = cls.get_ent(ent, subdict)
+        for key, value in subdict.items():
+            setattr(instance, key, value)
+        instance.save()
+        return str(instance)
 
     @classmethod
     def cli_delete(cls, ent : Type[DatabaseEntity], subdict : dict, **kwargs) -> str:
@@ -95,25 +96,26 @@ class ConsumableHandler(CLIHandler):
             raise ArgumentError(None, "Staff id must exist within the database.")
         
     @classmethod
-    def _handle_dates(cls, subdict : dict, format : str) -> None:
+    def _handle_type_conversion(cls, subdict : dict, date_format : str) -> None:
         if "start_date" in subdict:
-            subdict["start_date"] = datetime.strptime(subdict["start_date"], format).timestamp()
+            subdict["start_date"] = datetime.strptime(subdict["start_date"], date_format).timestamp()
         if "end_date" in subdict:
-            subdict["end_date"] = datetime.strptime(subdict["end_date"], format).timestamp()
+            subdict["end_date"] = datetime.strptime(subdict["end_date"], date_format).timestamp()
+        if "status" in subdict:
+            subdict["status"] = Status[subdict["status"]]
 
     @classmethod
-    def cli_create(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
+    def cli_list(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
         try:
-            cls._handle_dates(subdict, kwargs["date_format"])
+            cls._handle_type_conversion(subdict, kwargs["date_format"])
         except ValueError as e:
             raise ArgumentError(None, str(e))
-        try:
-            instance = ent(**subdict)
-        except TypeError:
-            raise ArgumentError(None, "Could not instanitate specified entity.")
-        instance.save()
-        cls.add_staff(instance, kwargs["staff"])
-        return str(instance)
+        instances = cls.get_list_ents(ent, subdict, **kwargs)
+        date_format = kwargs["date_format"]
+        instances = [[i.id, i.name, i.major_parts, i.minor_parts, i.rating, i.completions, i.status.name,
+                      datetime.fromtimestamp(i.start_date).strftime(date_format) if i.start_date else i.start_date, 
+                      datetime.fromtimestamp(i.end_date).strftime(date_format) if i.end_date else i.end_date] for i in instances]
+        return str(tabulate(instances, headers=["#", "Name", ent.MAJOR_PART_NAME, ent.MINOR_PART_NAME, "Rating", "Completions", "Status", "Started", "Completed"]))
 
     @classmethod
     def cli_update(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
@@ -132,9 +134,9 @@ class ConsumableHandler(CLIHandler):
         else:
             if kwargs["finish"]:
                 instance.completions = instance.completions + 1
-        # Convert dates to float
+        # Convert dates to float and other type conversions
         try:
-            cls._handle_dates(subdict, kwargs["date_format"])
+            cls._handle_type_conversion(subdict, kwargs["date_format"])
         except ValueError as e:
             raise ArgumentError(None, str(e))
         # Update other values
@@ -145,13 +147,26 @@ class ConsumableHandler(CLIHandler):
         return str(instance)
     
     @classmethod
-    def cli_list(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
-        instances = cls.get_list_ents(ent, subdict, **kwargs)
-        date_format = kwargs["date_format"]
-        instances = [[i.id, i.name, i.major_parts, i.minor_parts, i.rating, i.completions, 
-                      datetime.fromtimestamp(i.start_date).strftime(date_format) if i.start_date else i.start_date, 
-                      datetime.fromtimestamp(i.end_date).strftime(date_format) if i.end_date else i.end_date] for i in instances]
-        return str(tabulate(instances, headers=["#", "Name", ent.MAJOR_PART_NAME, ent.MINOR_PART_NAME, "Rating", "Completions", "Started", "Completed"]))
+    def cli_delete(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
+        try:
+            cls._handle_type_conversion(subdict, kwargs["date_format"])
+        except ValueError as e:
+            raise ArgumentError(None, str(e)) 
+        return super().cli_delete(ent, subdict, **kwargs)
+
+    @classmethod
+    def cli_create(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
+        try:
+            cls._handle_type_conversion(subdict, kwargs["date_format"])
+        except ValueError as e:
+            raise ArgumentError(None, str(e))
+        try:
+            instance = ent(**subdict)
+        except TypeError:
+            raise ArgumentError(None, "Could not instanitate specified entity.")
+        instance.save()
+        cls.add_staff(instance, kwargs["staff"])
+        return str(instance)
 
 class StaffHandler(CLIHandler):
 

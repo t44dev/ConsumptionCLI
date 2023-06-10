@@ -193,6 +193,7 @@ class SQLiteTableInstantiator():
             id INTEGER PRIMARY KEY NOT NULL UNIQUE DEFAULT 0,
             name TEXT NOT NULL,
             type TEXT NOT NULL,
+            status INTEGER NOT NULL DEFAULT 0,
             major_parts INTEGER NOT NULL DEFAULT 0,
             minor_parts INTEGER NOT NULL DEFAULT 0,
             completions INTEGER NOT NULL DEFAULT 0,

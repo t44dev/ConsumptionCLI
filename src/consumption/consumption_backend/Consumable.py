@@ -2,10 +2,18 @@
 from __future__ import annotations # For self-referential type-hints
 from typing import Union
 from datetime import datetime
+from enum import Enum
 
 # Package Imports
 from .Database import DatabaseEntity
 from .Staff import Staff
+
+class Status(Enum):
+    PLANNING = 0
+    IN_PROGRESS = 1
+    ON_HOLD = 2
+    DROPPED = 3
+    COMPLETED = 4
 
 class Consumable(DatabaseEntity):
     
@@ -18,6 +26,7 @@ class Consumable(DatabaseEntity):
                 id : Union[int, None] = None, \
                 name : str = "", \
                 type : str = "", \
+                status : Union[Status, int] = Status.IN_PROGRESS, \
                 major_parts : int = 0, \
                 minor_parts : int = 0, \
                 completions : int = 0, \
@@ -28,6 +37,7 @@ class Consumable(DatabaseEntity):
         super().__init__(self.DB_NAME, id)
         self.name = name
         self.type = type
+        self.status = status if isinstance(status, Status) else Status(status)
         self.major_parts = major_parts
         self.minor_parts = minor_parts
         self.completions = completions
@@ -76,6 +86,7 @@ class Consumable(DatabaseEntity):
     def save(self, **kwargs) -> int:
         return super().save(name=self.name, \
                             type=self.type, \
+                            status=self.status.value, \
                             major_parts=self.major_parts, \
                             minor_parts=self.minor_parts, \
                             completions=self.completions, \

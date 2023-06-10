@@ -3,7 +3,7 @@ import argparse
 
 # Package Imports
 from consumption.consumption_backend.Database import DatabaseEntity, SQLiteTableInstantiator
-from consumption.consumption_backend.Consumable import Consumable
+from consumption.consumption_backend.Consumable import Consumable, Status
 from consumption.consumption_backend.Staff import Staff
 from .SubdictAction import SubdictAction
 from .CLIHandling import CLIHandler, StaffHandler, ConsumableHandler
@@ -34,13 +34,14 @@ cons_parser.set_defaults(_handler=ConsumableHandler, _ent=Consumable)
 cons_parser.add_argument("-i", "--id", type=int, dest="id", action=SubdictAction, default=argparse.SUPPRESS)
 cons_parser.add_argument("-n", "--name", dest="name", action=SubdictAction, default=argparse.SUPPRESS)
 cons_parser.add_argument("-t", "--type", type=str.upper, dest="type", action=SubdictAction, default=argparse.SUPPRESS)
+cons_parser.add_argument("-s", "--status", dest="status", choices=[e.name for e in Status], action=SubdictAction, default=argparse.SUPPRESS)
 cons_parser.add_argument("-M", "--major", type=int, dest="major_parts", action=SubdictAction, default=argparse.SUPPRESS)
 cons_parser.add_argument("-m", "--minor", type=int, dest="minor_parts", action=SubdictAction, default=argparse.SUPPRESS)
 cons_parser.add_argument("-r", "--rating", type=float, dest="rating", action=SubdictAction, default=argparse.SUPPRESS)
 cons_parser.add_argument("--sd", "--startdate", dest="start_date", action=SubdictAction, default=argparse.SUPPRESS)
 cons_parser.add_argument("--ed", "--enddate", dest="end_date", action=SubdictAction, default=argparse.SUPPRESS)
 cons_parser.add_argument("--df", "--dateformat", dest="date_format", default="%Y/%m/%d")
-cons_parser.add_argument("-s", "--staff", dest="staff", nargs='*', default=[])
+cons_parser.add_argument("-S", "--staff", dest="staff", nargs='*', default=[])
 # Commands
 cons_parser.add_argument("--order", choices=["id", "name", "rating", "completions", "start_date", "end_date"], default="name")
 cons_parser.add_argument("--reverse", action="store_true")
