@@ -1,12 +1,11 @@
 # TODO LIST
 ### Features
 #### High Priority
-- [ ] Migrate backend to new repo
-- [ ] Novel/Movie/Comic/TV Series
-- [ ] Update dates
 - [ ] Allow direct access from command-line on all platforms.
 - [ ] Consumable Status: Planning/In Progress/On Hold/Finished/Rewatching/Reading
 - [ ] Consider using only generalized Consumable instead of subclasses
+- [ ] Novel/Movie/Comic/TV Series
+- [ ] Migrate backend to new repo
 #### Medium Priority
 - [ ] Search consumables by staff
 - [ ] Tags
@@ -31,6 +30,7 @@
     - [x] Allow update to progress
     - [x] In progress functionality
     - [x] Update general fields that don't require processing
+    - [x] Update dates
 - [x] Code Cleanliness
     - [x] Don't repeat code across classes for database operations
     - [x] No SQL in non-database classes

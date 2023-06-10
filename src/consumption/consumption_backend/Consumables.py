@@ -31,8 +31,8 @@ class Consumable(DatabaseEntity):
         self.rating = rating
         self.staff = [] if staff is None else staff
         # Using posix-timestamp
-        self.start_date = datetime.fromtimestamp(start_date) if start_date else datetime.utcnow()
-        self.end_date = datetime.fromtimestamp(end_date) if end_date else end_date
+        self.start_date = start_date if start_date else datetime.utcnow().timestamp()
+        self.end_date = end_date
         if self.id is not None:
             self.populate_staff()
     
@@ -57,15 +57,13 @@ class Consumable(DatabaseEntity):
         self.db_handler.insert(database, staff_id=id, role=role, **kwargs)
 
     def save(self, **kwargs) -> int:
-        start_date = self.start_date.timestamp()
-        end_date = self.end_date.timestamp() if self.end_date else None
         return super().save(name=self.name, \
                             major_parts=self.major_parts, \
                             minor_parts=self.minor_parts, \
                             completions=self.completions, \
                             rating=self.rating, \
-                            start_date=start_date, \
-                            end_date=end_date, \
+                            start_date=self.start_date, \
+                            end_date=self.end_date, \
                             **kwargs)
 
     def __eq__(self, other: Consumable) -> bool:
@@ -94,7 +92,7 @@ class Novel(Consumable):
                 minor_parts : int = 0, \
                 completions : int = 0, \
                 rating : Union[float, None] = None, \
-                start_date : float = datetime.utcnow().timestamp(), \
+                start_date : float = None, \
                 end_date : Union[float, None] = None) -> None:
         super().__init__(Novel.DATABASE_NAME, id, name, major_parts, minor_parts, completions, rating, start_date, end_date)
 

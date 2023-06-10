@@ -93,11 +93,20 @@ class ConsumableHandler(CLIHandler):
             raise ArgumentError(None, "Staff arguments must be passed in id, Role pairs. e.g. -S 2 Author 3 Illustrator.")
         except TypeError:
             raise ArgumentError(None, "Staff id must exist within the database.")
-
-
+        
+    @classmethod
+    def _handle_dates(cls, subdict : dict, format : str) -> None:
+        if "start_date" in subdict:
+            subdict["start_date"] = datetime.strptime(subdict["start_date"], format).timestamp()
+        if "end_date" in subdict:
+            subdict["end_date"] = datetime.strptime(subdict["end_date"], format).timestamp()
 
     @classmethod
     def cli_create(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
+        try:
+            cls._handle_dates(subdict, kwargs["date_format"])
+        except ValueError as e:
+            raise ArgumentError(None, str(e))
         try:
             instance = ent(**subdict)
         except TypeError:
@@ -115,7 +124,7 @@ class ConsumableHandler(CLIHandler):
         # Only update if first completion
         if instance.completions == 0:
             if kwargs["finish"]:
-                instance.end_date = datetime.utcnow()
+                instance.end_date = datetime.utcnow().timestamp()
                 instance.completions = instance.completions + 1
             subdict["major_parts"] = instance.major_parts + inc_major_parts
             subdict["minor_parts"] = instance.minor_parts + inc_minor_parts
@@ -123,6 +132,11 @@ class ConsumableHandler(CLIHandler):
         else:
             if kwargs["finish"]:
                 instance.completions = instance.completions + 1
+        # Convert dates to float
+        try:
+            cls._handle_dates(subdict, kwargs["date_format"])
+        except ValueError as e:
+            raise ArgumentError(None, str(e))
         # Update other values
         for key, value in subdict.items():
             setattr(instance, key, value)
@@ -133,7 +147,10 @@ class ConsumableHandler(CLIHandler):
     @classmethod
     def cli_list(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
         instances = cls.get_list_ents(ent, subdict, **kwargs)
-        instances = [[i.id, i.name, i.major_parts, i.minor_parts, i.rating, i.completions, i.start_date, i.end_date] for i in instances]
+        date_format = kwargs["date_format"]
+        instances = [[i.id, i.name, i.major_parts, i.minor_parts, i.rating, i.completions, 
+                      datetime.fromtimestamp(i.start_date).strftime(date_format) if i.start_date else i.start_date, 
+                      datetime.fromtimestamp(i.end_date).strftime(date_format) if i.end_date else i.end_date] for i in instances]
         return str(tabulate(instances, headers=["#", "Name", ent.MAJOR_PART_NAME, ent.MINOR_PART_NAME, "Rating", "Completions", "Started", "Completed"]))
 
 class StaffHandler(CLIHandler):
@@ -143,5 +160,3 @@ class StaffHandler(CLIHandler):
         staff = cls.get_list_ents(ent, subdict, **kwargs)
         staff = [[i.id, i.pseudonym, i.first_name, i.last_name] for i in staff]
         return str(tabulate(staff, headers=["#", "Pseudonym", "First Name", "Last Name"]))
-    
-
