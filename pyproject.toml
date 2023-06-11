@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "consumption"
-version = "0.0.1"
+version = "1.0.0"
 authors = [
   { name="track-44", email="trackfortyfour@proton.me" },
 ]
@@ -12,10 +12,9 @@ description = "A CLI tool for tracking consumption of media including Novels, Mo
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 3 - Beta",
     "Environment :: Console",
     "Programming Language :: Python :: 3",
-    "Programming Language :: SQL",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
     "Natural Language :: English",
