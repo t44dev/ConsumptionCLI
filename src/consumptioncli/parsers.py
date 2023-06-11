@@ -43,7 +43,7 @@ cons_parser.add_argument("--ed", "--enddate", dest="end_date", action=SubdictAct
 cons_parser.add_argument("--df", "--dateformat", dest="date_format", default="%Y/%m/%d")
 cons_parser.add_argument("-S", "--staff", dest="staff", nargs='*', default=[])
 # Commands
-cons_parser.add_argument("--order", choices=["id", "name", "rating", "completions", "start_date", "end_date"], default="name")
+cons_parser.add_argument("--order", choices=["id", "type", "name", "rating", "completions", "start_date", "end_date"], default="name")
 cons_parser.add_argument("--reverse", action="store_true")
 cons_parser.add_argument("-c", "--continue", dest="increment", action="store_true")
 cons_parser.add_argument("-f", "--finish", dest="finish", action="store_true")

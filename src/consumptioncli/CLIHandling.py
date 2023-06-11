@@ -112,10 +112,10 @@ class ConsumableHandler(CLIHandler):
             raise ArgumentError(None, str(e))
         instances = cls.get_list_ents(ent, subdict, **kwargs)
         date_format = kwargs["date_format"]
-        instances = [[i.id, i.name, i.major_parts, i.minor_parts, i.rating, i.completions, i.status.name,
+        instances = [[i.id, i.type, i.name, i.major_parts, i.minor_parts, i.rating, i.completions, i.status.name,
                       datetime.fromtimestamp(i.start_date).strftime(date_format) if i.start_date else i.start_date, 
                       datetime.fromtimestamp(i.end_date).strftime(date_format) if i.end_date else i.end_date] for i in instances]
-        return str(tabulate(instances, headers=["#", "Name", ent.MAJOR_PART_NAME, ent.MINOR_PART_NAME, "Rating", "Completions", "Status", "Started", "Completed"]))
+        return str(tabulate(instances, headers=["#", "Type", "Name", ent.MAJOR_PART_NAME, ent.MINOR_PART_NAME, "Rating", "Completions", "Status", "Started", "Completed"]))
 
     @classmethod
     def cli_update(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
