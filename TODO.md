@@ -1,7 +1,7 @@
 # TODO LIST
 ### Features
 #### High Priority
-- [ ] Allow direct access from command-line on all platforms.
+
 #### Medium Priority
 - [ ] Search consumables by staff
 - [ ] Tags
@@ -28,6 +28,7 @@
     - [x] In progress functionality
     - [x] Update general fields that don't require processing
     - [x] Update dates
+    - [x] Allow direct access from command-line on all platforms.
 - [x] Code Cleanliness
     - [x] Don't repeat code across classes for database operations
     - [x] No SQL in non-database classes

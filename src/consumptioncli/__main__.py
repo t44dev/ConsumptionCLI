@@ -8,6 +8,7 @@ def main():
     try:
         SQLiteTableInstantiator.run()
         print(args["_handler"].handle(args["_ent"], subdict, **args))
+        return 0
     except ArgumentError as e:
         main_parser.error(e.message)
 

@@ -10,6 +10,7 @@ authors = [
 ]
 description = "A CLI tool for tracking consumption of media including Novels, Movies, TV Series and more."
 readme = "README.md"
+license-files = { paths = ["LICENSE"] }
 requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -27,3 +28,6 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://github.com/track-44/consumption"
 "Bug Tracker" = "https://github.com/track-44/consumption/issues"
+
+[project.scripts]
+cons = "consumptioncli.__main__:main"
