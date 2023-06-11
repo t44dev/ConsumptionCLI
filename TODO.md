@@ -1,7 +1,6 @@
 # TODO LIST
 ### Features
 #### High Priority
-- [ ] Migrate backend to new repo
 - [ ] Allow direct access from command-line on all platforms.
 #### Medium Priority
 - [ ] Search consumables by staff
@@ -20,6 +19,7 @@
 ### Finished
 - [x] Features
     - [x] Consider using only generalized Consumable instead of subclasses - Implemented this method
+    - [x] Migrate backend to new repo
     - [x] Consumable Status: Planning/In Progress/On Hold/Finished/Rewatching/Reading
     - [x] Append/Remove staff
     - [x] Multiple staff on a Consumable
