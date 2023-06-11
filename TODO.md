@@ -15,6 +15,7 @@
 - [ ] Advanced find (regex for strings)
 - [ ] Advanced find (<, >, <=, >=, = for numerical values)
 ### Bugs/Problems
+- [ ] Start date possible after end date
 
 ### Finished
 - [x] Features
@@ -45,3 +46,4 @@
     - [x] Staff Backend
 - [x] Bugs/Problems
     - [x] Cant finish consumable without iterate flag set
+    - [x] Consumable created as COMPLETED does not set completions = 1 by default

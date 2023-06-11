@@ -33,7 +33,7 @@ class CLIHandler(ABC):
 
     @classmethod
     def get_list_ents(cls, ent : Type[T], subdict : dict, **kwargs) -> list[T]:
-        sortkey =  kwargs["order"]
+        sortkey = kwargs["order"]
         # Thanks to Andrew Clark for solution to sorting list with NoneTypes https://stackoverflow.com/a/18411610
         return sorted(ent.find(**subdict), key = lambda a : (getattr(a, sortkey) is not None, getattr(a, sortkey)), reverse=kwargs["reverse"])
 
@@ -121,10 +121,10 @@ class ConsumableHandler(CLIHandler):
     def cli_update(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
         instance = cls.get_ent(ent, subdict)
         # Add Volumes, Chapters, set End Date
-        inc_major_parts = subdict.pop("major_parts") if "major_parts" in subdict else 0
-        inc_minor_parts = subdict.pop("minor_parts") if "minor_parts" in subdict else 0
         # Only update if first completion
         if instance.completions == 0:
+            inc_major_parts = subdict.pop("major_parts") if "major_parts" in subdict else 0
+            inc_minor_parts = subdict.pop("minor_parts") if "minor_parts" in subdict else 0
             if kwargs["finish"]:
                 instance.end_date = datetime.utcnow().timestamp()
                 instance.completions = instance.completions + 1
