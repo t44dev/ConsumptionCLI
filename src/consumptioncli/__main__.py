@@ -1,6 +1,6 @@
 from argparse import ArgumentError
 from .parsers import main_parser
-from consumption.consumption_backend.Database import SQLiteTableInstantiator
+from consumptionbackend.Database import SQLiteTableInstantiator
 
 def main():
     args = vars(main_parser.parse_args())

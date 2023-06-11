@@ -1,10 +1,10 @@
 # General Imports
 import argparse
 
-# Package Imports
-from consumption.consumption_backend.Database import DatabaseEntity, SQLiteTableInstantiator
-from consumption.consumption_backend.Consumable import Consumable, Status
-from consumption.consumption_backend.Staff import Staff
+# Consumption Imports
+from consumptionbackend.Database import DatabaseEntity, SQLiteTableInstantiator
+from consumptionbackend.Consumable import Consumable, Status
+from consumptionbackend.Staff import Staff
 from .SubdictAction import SubdictAction
 from .CLIHandling import CLIHandler, StaffHandler, ConsumableHandler
 

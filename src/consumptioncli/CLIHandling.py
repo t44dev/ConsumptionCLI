@@ -5,10 +5,10 @@ from typing import Type, TypeVar
 from abc import abstractmethod, ABC
 from tabulate import tabulate
 
-# Package Imports
-from consumption.consumption_backend.Database import DatabaseEntity
-from consumption.consumption_backend.Consumable import Consumable, Status
-from consumption.consumption_backend.Staff import Staff
+# Consumption Imports
+from consumptionbackend.Database import DatabaseEntity
+from consumptionbackend.Consumable import Consumable, Status
+from consumptionbackend.Staff import Staff
 
 T = TypeVar("T", DatabaseEntity, Consumable, Staff)
 
