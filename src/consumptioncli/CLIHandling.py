@@ -120,20 +120,19 @@ class ConsumableHandler(CLIHandler):
     @classmethod
     def cli_update(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
         instance = cls.get_ent(ent, subdict)
-        # Add Volumes, Chapters, set End Date
-        # Only update if first completion
-        if instance.completions == 0:
+        # Handle increment
+        if kwargs["increment"]:
             inc_major_parts = subdict.pop("major_parts") if "major_parts" in subdict else 0
             inc_minor_parts = subdict.pop("minor_parts") if "minor_parts" in subdict else 0
-            if kwargs["finish"]:
+            # Only increment parts on first completion
+            if instance.completions == 0:
+                subdict["major_parts"] = instance.major_parts + inc_major_parts
+                subdict["minor_parts"] = instance.minor_parts + inc_minor_parts
+        # Handle finish
+        if kwargs["finish"]:
+            if instance.completions == 0:
                 instance.end_date = datetime.utcnow().timestamp()
-                instance.completions = instance.completions + 1
-            subdict["major_parts"] = instance.major_parts + inc_major_parts
-            subdict["minor_parts"] = instance.minor_parts + inc_minor_parts
-        # Otherwise only update completions on finish flag
-        else:
-            if kwargs["finish"]:
-                instance.completions = instance.completions + 1
+            instance.completions = instance.completions + 1
         # Convert dates to float and other type conversions
         try:
             cls._handle_type_conversion(subdict, kwargs["date_format"])

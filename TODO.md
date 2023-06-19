@@ -1,12 +1,16 @@
 # TODO LIST
 ### Features
 #### High Priority
-
+- [ ] Tie data integrity constraints more to the backend than frontend with appropriate errors being sent and handled for bad data.
 #### Medium Priority
 - [ ] Search consumables by staff
 - [ ] Tags
 - [ ] Brainstorm more sensible re-completion flow
 - [ ] Staff list contains consumable information, e.g. count
+- [ ] Row number in list
+- [ ] Log file
+- [ ] Display all information on update
+- [ ] --continue flag should set status to IN_PROGRESS
 #### Low Priority
 - [ ] Characters & Character assignment
 - [ ] Docstrings
@@ -16,6 +20,7 @@
 - [ ] Advanced find (<, >, <=, >=, = for numerical values)
 ### Bugs/Problems
 - [ ] Start date possible after end date
+- [ ] Can't undo startdate
 
 ### Finished
 - [x] Features
@@ -47,3 +52,4 @@
 - [x] Bugs/Problems
     - [x] Cant finish consumable without iterate flag set
     - [x] Consumable created as COMPLETED does not set completions = 1 by default
+    - [x] Fixed logic error with increment always occuring even when not set in update of consumable
