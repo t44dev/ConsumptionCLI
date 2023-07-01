@@ -53,12 +53,17 @@ class CLIHandler(ABC):
         raise ArgumentError(None, "Please specify an entity to list.")
 
     @classmethod
+    @abstractmethod
+    def _cli_tabulate(cls, instances : list[DatabaseEntity]) -> str:
+        pass
+
+    @classmethod
     def cli_update(cls, ent : Type[DatabaseEntity], subdict : dict, **kwargs) -> str:
         instance = cls.get_ent(ent, subdict)
         for key, value in subdict.items():
             setattr(instance, key, value)
         instance.save()
-        return str(instance)
+        return cls._cli_tabulate([instance])
 
     @classmethod
     def cli_delete(cls, ent : Type[DatabaseEntity], subdict : dict, **kwargs) -> str:
@@ -76,11 +81,12 @@ class CLIHandler(ABC):
         except TypeError:
             raise ArgumentError(None, "Could not instanitate specified entity.")
         instance.save()
-        return str(instance)
+        return cls._cli_tabulate([instance])
     
     @classmethod
     def cli_noaction(cls, ent : Type[DatabaseEntity], subdict : dict, **kwargs):
         raise ArgumentError(None, "No action specified.")
+
 
 class ConsumableHandler(CLIHandler):
     
@@ -119,11 +125,14 @@ class ConsumableHandler(CLIHandler):
         except ValueError as e:
             raise ArgumentError(None, str(e))
         instances = cls.get_list_ents(ent, subdict, **kwargs)
-        date_format = kwargs["date_format"]
-        instances = [[row, i.id, i.type, i.name, i.major_parts, i.minor_parts, i.rating, i.completions, i.status.name,
-                      datetime.fromtimestamp(i.start_date).strftime(date_format) if i.start_date else i.start_date, 
-                      datetime.fromtimestamp(i.end_date).strftime(date_format) if i.end_date else i.end_date] for row, i in enumerate(instances)]
-        return str(tabulate(instances, headers=["#", "ID", "Type", "Name", ent.MAJOR_PART_NAME, ent.MINOR_PART_NAME, "Rating", "Completions", "Status", "Started", "Completed"]))
+        return cls._cli_tabulate(instances, kwargs["date_format"]) + f"\n{len(instances)} Results..."
+
+    @classmethod
+    def _cli_tabulate(cls, instances : list[Consumable], date_format : str = r"%Y/%m/%d") -> str:
+        instances = [[row+1, i.id, i.type, i.name, i.major_parts, i.minor_parts, i.rating, i.completions, i.status.name,
+                datetime.fromtimestamp(i.start_date).strftime(date_format) if i.start_date else i.start_date, 
+                datetime.fromtimestamp(i.end_date).strftime(date_format) if i.end_date else i.end_date] for row, i in enumerate(instances)]
+        return tabulate(instances, headers=["#", "ID", "Type", "Name", Consumable.MAJOR_PART_NAME, Consumable.MINOR_PART_NAME, "Rating", "Completions", "Status", "Started", "Completed"])
 
     @classmethod
     def cli_update(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
@@ -153,7 +162,7 @@ class ConsumableHandler(CLIHandler):
             setattr(instance, key, value)
         instance.save()
         cls.add_staff(instance, kwargs["staff"])
-        return str(instance)
+        return cls._cli_tabulate([instance], kwargs["date_format"])
     
     @classmethod
     def cli_delete(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
@@ -177,12 +186,16 @@ class ConsumableHandler(CLIHandler):
             raise ArgumentError(None, "Could not instanitate specified entity.")
         instance.save()
         cls.add_staff(instance, kwargs["staff"])
-        return str(instance)
+        return cls._cli_tabulate([instance], kwargs["date_format"])
 
 class StaffHandler(CLIHandler):
 
     @classmethod
     def cli_list(cls, ent: Type[Staff], subdict: dict, **kwargs) -> str:
-        staff = cls.get_list_ents(ent, subdict, **kwargs)
-        staff = [[row, i.id, i.pseudonym, i.first_name, i.last_name] for row, i in enumerate(staff)]
-        return str(tabulate(staff, headers=["#", "ID", "Pseudonym", "First Name", "Last Name"]))
+        instances = cls.get_list_ents(ent, subdict, **kwargs)
+        instances = [[row+1, i.id, i.pseudonym, i.first_name, i.last_name] for row, i in enumerate(instances)]
+        return cls._cli_tabulate(instances) + f"\n{len(instances)} Results..."
+    
+    @classmethod
+    def _cli_tabulate(cls, instances : list[Staff]):
+        return tabulate(instances, headers=["#", "ID", "Pseudonym", "First Name", "Last Name"])
