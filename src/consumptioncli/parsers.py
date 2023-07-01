@@ -25,7 +25,7 @@ staff_parser.add_argument("--fn", "--firstname", dest="first_name", action=Subdi
 staff_parser.add_argument("--ln", "--lastname", dest="last_name", action=SubdictAction, default=argparse.SUPPRESS)
 staff_parser.add_argument("--ps", "--pseudonym", dest="pseudonym", action=SubdictAction, default=argparse.SUPPRESS)
 # Commands
-staff_parser.add_argument("--order", choices=["id", "first_name", "last_name", "pseudonym"], default="first_name")
+staff_parser.add_argument("-o", "--order", choices=["id", "first_name", "last_name", "pseudonym"], default="first_name")
 staff_parser.add_argument("--reverse", action="store_true")
 
 ## Consumable
@@ -44,7 +44,7 @@ cons_parser.add_argument("--ed", "--enddate", dest="end_date", action=SubdictAct
 cons_parser.add_argument("--df", "--dateformat", dest="date_format", default=r"%Y/%m/%d")
 cons_parser.add_argument("-S", "--staff", dest="staff", nargs='*', default=[])
 # Commands
-cons_parser.add_argument("--order", choices=["id", "type", "name", "rating", "completions", "start_date", "end_date"], default="name")
+cons_parser.add_argument("-o", "--order", choices=["id", "type", "name", "rating", "completions", "start_date", "end_date"], default="name")
 cons_parser.add_argument("--reverse", action="store_true")
 cons_parser.add_argument("-c", "--continue", dest="increment", action="store_true")
 cons_parser.add_argument("-f", "--finish", dest="finish", action="store_true")

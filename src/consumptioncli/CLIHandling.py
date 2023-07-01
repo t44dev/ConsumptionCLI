@@ -71,6 +71,8 @@ class CLIHandler(ABC):
     def cli_create(cls, ent : Type[DatabaseEntity], subdict : dict, **kwargs) -> str:
         try:
             instance = ent(**subdict)
+        except ValueError as e:
+            raise ArgumentError(None, str(e))
         except TypeError:
             raise ArgumentError(None, "Could not instanitate specified entity.")
         instance.save()
@@ -98,9 +100,15 @@ class ConsumableHandler(CLIHandler):
     @classmethod
     def _handle_type_conversion(cls, subdict : dict, date_format : str) -> None:
         if "start_date" in subdict:
-            subdict["start_date"] = datetime.strptime(subdict["start_date"], date_format).timestamp()
+            if subdict["start_date"] == "None":
+                subdict["start_date"] = None
+            else:
+                subdict["start_date"] = datetime.strptime(subdict["start_date"], date_format).timestamp()
         if "end_date" in subdict:
-            subdict["end_date"] = datetime.strptime(subdict["end_date"], date_format).timestamp()
+            if subdict["end_date"] == "None":
+                subdict["end_date"] = None
+            else:
+                subdict["end_date"] = datetime.strptime(subdict["end_date"], date_format).timestamp()
         if "status" in subdict:
             subdict["status"] = Status[subdict["status"]]
 
@@ -112,16 +120,17 @@ class ConsumableHandler(CLIHandler):
             raise ArgumentError(None, str(e))
         instances = cls.get_list_ents(ent, subdict, **kwargs)
         date_format = kwargs["date_format"]
-        instances = [[i.id, i.type, i.name, i.major_parts, i.minor_parts, i.rating, i.completions, i.status.name,
+        instances = [[row, i.id, i.type, i.name, i.major_parts, i.minor_parts, i.rating, i.completions, i.status.name,
                       datetime.fromtimestamp(i.start_date).strftime(date_format) if i.start_date else i.start_date, 
-                      datetime.fromtimestamp(i.end_date).strftime(date_format) if i.end_date else i.end_date] for i in instances]
-        return str(tabulate(instances, headers=["#", "Type", "Name", ent.MAJOR_PART_NAME, ent.MINOR_PART_NAME, "Rating", "Completions", "Status", "Started", "Completed"]))
+                      datetime.fromtimestamp(i.end_date).strftime(date_format) if i.end_date else i.end_date] for row, i in enumerate(instances)]
+        return str(tabulate(instances, headers=["#", "ID", "Type", "Name", ent.MAJOR_PART_NAME, ent.MINOR_PART_NAME, "Rating", "Completions", "Status", "Started", "Completed"]))
 
     @classmethod
     def cli_update(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
         instance = cls.get_ent(ent, subdict)
         # Handle increment
         if kwargs["increment"]:
+            instance.status = Status.IN_PROGRESS
             inc_major_parts = subdict.pop("major_parts") if "major_parts" in subdict else 0
             inc_minor_parts = subdict.pop("minor_parts") if "minor_parts" in subdict else 0
             # Only increment parts on first completion
@@ -130,6 +139,7 @@ class ConsumableHandler(CLIHandler):
                 subdict["minor_parts"] = instance.minor_parts + inc_minor_parts
         # Handle finish
         if kwargs["finish"]:
+            instance.status = Status.COMPLETED
             if instance.completions == 0:
                 instance.end_date = datetime.utcnow().timestamp()
             instance.completions = instance.completions + 1
@@ -161,7 +171,9 @@ class ConsumableHandler(CLIHandler):
             raise ArgumentError(None, str(e))
         try:
             instance = ent(**subdict)
-        except TypeError:
+        except ValueError as e:
+            raise ArgumentError(None, str(e))
+        except TypeError as e:
             raise ArgumentError(None, "Could not instanitate specified entity.")
         instance.save()
         cls.add_staff(instance, kwargs["staff"])
@@ -172,5 +184,5 @@ class StaffHandler(CLIHandler):
     @classmethod
     def cli_list(cls, ent: Type[Staff], subdict: dict, **kwargs) -> str:
         staff = cls.get_list_ents(ent, subdict, **kwargs)
-        staff = [[i.id, i.pseudonym, i.first_name, i.last_name] for i in staff]
-        return str(tabulate(staff, headers=["#", "Pseudonym", "First Name", "Last Name"]))
+        staff = [[row, i.id, i.pseudonym, i.first_name, i.last_name] for row, i in enumerate(staff)]
+        return str(tabulate(staff, headers=["#", "ID", "Pseudonym", "First Name", "Last Name"]))
