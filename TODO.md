@@ -1,16 +1,21 @@
 # TODO LIST
 ### Features
 #### High Priority
-- [ ] Tie data integrity constraints more to the backend than frontend with appropriate errors being sent and handled for bad data.
+- [x] Tie data integrity constraints more to the backend than frontend with appropriate errors being sent and handled for bad data.
+- [x] Row number in list
+- [x] Display all information on update
+- [x] Count list results at end
+- [x] argparse help text
+- [ ] Github page setup
 #### Medium Priority
+- [ ] Update recent
+- [ ] Update by values other than id
+- [ ] Non-case sensitivity for relevant fields
 - [ ] Search consumables by staff
 - [ ] Tags
 - [ ] Brainstorm more sensible re-completion flow
 - [ ] Staff list contains consumable information, e.g. count
-- [ ] Row number in list
 - [ ] Log file
-- [ ] Display all information on update
-- [ ] --continue flag should set status to IN_PROGRESS
 #### Low Priority
 - [ ] Characters & Character assignment
 - [ ] Docstrings
@@ -19,8 +24,12 @@
 - [ ] Advanced find (regex for strings)
 - [ ] Advanced find (<, >, <=, >=, = for numerical values)
 ### Bugs/Problems
-- [ ] Start date possible after end date
-- [ ] Can't undo startdate
+- [x] -o as alias for --order
+- [x] Start date possible after end date
+- [x] Can't undo startdate - None string passed
+- [x] --finish flag should set status to COMPLETED
+- [x] --continue flag should set status to IN_PROGRESS
+- [x] Currently Consumables start as IN PROGRESS by default, switch to PLANNING
 
 ### Finished
 - [x] Features
