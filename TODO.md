@@ -6,7 +6,7 @@
 - [x] Display all information on update
 - [x] Count list results at end
 - [x] argparse help text
-- [ ] Github page setup
+- [x] Github page setup
 #### Medium Priority
 - [ ] Update recent
 - [ ] Update by values other than id
@@ -30,6 +30,7 @@
 - [x] --finish flag should set status to COMPLETED
 - [x] --continue flag should set status to IN_PROGRESS
 - [x] Currently Consumables start as IN PROGRESS by default, switch to PLANNING
+- [x] Bug where 0 input would clear subdict due to being interpreted as falsey
 
 ### Finished
 - [x] Features

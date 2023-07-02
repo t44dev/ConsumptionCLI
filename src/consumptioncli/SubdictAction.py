@@ -12,7 +12,7 @@ class SubdictAction(Action):
                  namespace: Namespace, \
                  values: str | Sequence[Any] | None, \
                  option_string: str | None = None) -> None:
-        if values:
+        if values is not None:
             try:
                 subdict = getattr(namespace, self.SUBDICT_DEST)
             except AttributeError:
