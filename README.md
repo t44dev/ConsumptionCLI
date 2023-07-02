@@ -10,7 +10,7 @@ Written in Python, **ConsumptionCLI** is a lightweight command line interface to
 - pip
 
 ```console
-pip install consumptioncli
+$ pip install consumptioncli
 ```
 ### Method 2. Self Build
 #### Requirements
