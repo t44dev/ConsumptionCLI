@@ -193,9 +193,9 @@ class StaffHandler(CLIHandler):
     @classmethod
     def cli_list(cls, ent: Type[Staff], subdict: dict, **kwargs) -> str:
         instances = cls.get_list_ents(ent, subdict, **kwargs)
-        instances = [[row+1, i.id, i.pseudonym, i.first_name, i.last_name] for row, i in enumerate(instances)]
         return cls._cli_tabulate(instances) + f"\n{len(instances)} Results..."
     
     @classmethod
     def _cli_tabulate(cls, instances : list[Staff]):
+        instances = [[row+1, i.id, i.pseudonym, i.first_name, i.last_name] for row, i in enumerate(instances)]
         return tabulate(instances, headers=["#", "ID", "Pseudonym", "First Name", "Last Name"])
