@@ -1,12 +1,17 @@
 # TODO LIST
-- [ ] Dev branch
-- [ ] *List* Cursor interaction
-- [ ] *Set/Find* seperation and *Find* on any field
-- [ ] *Series* implementation
-- [ ] Input on missing mandatory values
-- [ ] Update script
-- [ ] CI/CD
+## Current
+- [x] Dev branch
 - [ ] Tags
+- [ ] *Series* implementation
+- [ ] *Set/Find* seperation and *Find* on any field
 - [ ] *Staff* full implementation
+- [ ] *List* Cursor interaction
+- [ ] Input on missing mandatory values
+- [ ] Setup/Update script
+- [ ] CI/CD
+
+## Next
+- [ ] Dataclasses/Attrs
+- [ ] Further Tests
 - [ ] Log file
-- [ ] Local dev script
+- [ ] Import from...
