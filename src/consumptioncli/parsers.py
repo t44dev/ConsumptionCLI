@@ -23,10 +23,6 @@ def get_main_parser() -> argparse.ArgumentParser:
     add_series_parsers(sub_parsers)
     return main_parser
 
-# main_parser.add_argument("-c", "--create", action="store_true", dest="create", help="create a new entity")
-# main_parser.add_argument("-u", "--update", action="store_true", dest="update", help="update an existing entity by its id")
-# main_parser.add_argument("-d", "--delete", action="store_true", dest="delete", help="delete an entity by its id")
-# main_parser.add_argument("-l", "--list", action="store_true", dest="list", help="list entities with some search conditions")
 
 # Consumable Parsing
 
@@ -61,8 +57,10 @@ def add_consumable_parsers(sub_parsers: argparse._SubParsersAction) -> None:
     # Delete Consumable
     cons_parser_delete = sub_cons_parsers.add_parser(
         "delete", aliases=["d"], help="delete existing consumable")
-
-
+    cons_parser_delete.set_defaults(mode="delete")
+    add_consumable_id_arg(cons_parser_delete, "where")
+    add_consumable_arguments(cons_parser_delete, "where")
+    
 def add_consumable_id_arg(parser: argparse.ArgumentParser, dest: str) -> None:
     parser.add_argument("-i", "--id", type=int,
                         dest=f"{dest}.id", action=SubNamespaceAction, default=argparse.SUPPRESS, help="unique consumable id")

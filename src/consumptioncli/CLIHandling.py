@@ -110,7 +110,7 @@ class ConsumableHandler(CLIHandler):
         # Update
         updated_consumables = []
         if len(consumables) == 0:
-            return "No consumables matching where conditions."
+            return "No Consumables matching where conditions."
         elif len(consumables) > 1:
             for consumable in consumables:
                 if confirm_action(f"update of {str(consumable)}"):
@@ -123,11 +123,29 @@ class ConsumableHandler(CLIHandler):
         if len(updated_consumables) > 0:
             return cls._tabulate_consumable(updated_consumables, getattr(args, "date_format"))
         else:
-            return "No consumables updated."
+            return "No Consumable(s) updated."
 
     @classmethod
     def cli_delete(cls, args: Namespace) -> str:
-        pass
+        where = getattr(args, "where", Namespace())
+        # Prepare Arguments
+        cls._prepare_args(args, where)
+        # Find
+        consumables = Consumable.find(**vars(where))
+        # Delete
+        deleted = 0        
+        if len(consumables) == 0:
+            return "No Consumables matching where conditions."
+        elif len(consumables) > 1:
+            for consumable in consumables:
+                if confirm_action(f"deletion of {str(consumable)}"):
+                    consumable.delete_self()
+                    deleted += 1
+        # Create String
+        else:
+            consumables[0].delete_self()
+            deleted += 1
+        return f"{deleted} Consumables deleted."
 
     @classmethod
     def no_action(cls, args: Namespace) -> str:

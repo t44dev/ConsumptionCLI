@@ -10,6 +10,10 @@
 - [ ] Setup/Update script
 - [ ] CI/CD
 
+### Minor
+- [ ] Force flag on update and delete
+- [ ] Delete returns deleted records
+
 ## Next
 - [ ] Dataclasses/Attrs
 - [ ] Further Tests
