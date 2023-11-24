@@ -1,5 +1,6 @@
 # General Imports
 import argparse
+from typing import Callable
 
 # Consumption Imports
 from consumptionbackend.Database import DatabaseEntity
@@ -24,6 +25,15 @@ def get_main_parser() -> argparse.ArgumentParser:
     return main_parser
 
 
+def add_where_set(parser: argparse.ArgumentParser, id: Callable, args: Callable) -> None:
+    sub = parser.add_subparsers()
+    where_parser = sub.add_parser("where", aliases=["w"])
+    id(where_parser, "where")
+    args(where_parser, "where")
+    where_sub = where_parser.add_subparsers()
+    set_parser = where_sub.add_parser("set", aliases=["s"])
+    args(set_parser, "set")
+
 # Consumable Parsing
 
 
@@ -35,12 +45,12 @@ def add_consumable_parsers(sub_parsers: argparse._SubParsersAction) -> None:
                              metavar="FORMAT", help="date format string, e.g %%Y/%%m/%%d")
     sub_cons_parsers = cons_parser.add_subparsers()
     # New Consumable
-    cons_parser_new: argparse.ArgumentParser = sub_cons_parsers.add_parser(
+    cons_parser_new = sub_cons_parsers.add_parser(
         "new", aliases=["n"], help="create a new consumable")
     cons_parser_new.set_defaults(mode="new")
     add_consumable_arguments(cons_parser_new, "new")
     # List Consumable
-    cons_parser_list: argparse.ArgumentParser = sub_cons_parsers.add_parser(
+    cons_parser_list = sub_cons_parsers.add_parser(
         "list", aliases=["l"], help="list consumables")
     cons_parser_list.set_defaults(mode="list")
     cons_parser_list.add_argument("-o", "--order", dest="order",
@@ -53,14 +63,16 @@ def add_consumable_parsers(sub_parsers: argparse._SubParsersAction) -> None:
     cons_parser_update = sub_cons_parsers.add_parser(
         "update", aliases=["u"], help="update existing consumable")
     cons_parser_update.set_defaults(mode="update")
-    add_where_set(cons_parser_update)
+    add_where_set(cons_parser_update, add_consumable_id_arg,
+                  add_consumable_arguments)
     # Delete Consumable
     cons_parser_delete = sub_cons_parsers.add_parser(
         "delete", aliases=["d"], help="delete existing consumable")
     cons_parser_delete.set_defaults(mode="delete")
     add_consumable_id_arg(cons_parser_delete, "where")
     add_consumable_arguments(cons_parser_delete, "where")
-    
+
+
 def add_consumable_id_arg(parser: argparse.ArgumentParser, dest: str) -> None:
     parser.add_argument("-i", "--id", type=int,
                         dest=f"{dest}.id", action=SubNamespaceAction, default=argparse.SUPPRESS, help="unique consumable id")
@@ -87,47 +99,99 @@ def add_consumable_arguments(parser: argparse.ArgumentParser, dest: str) -> None
                         default=argparse.SUPPRESS, metavar="DATE", help="date of first completion")
 
 
-def add_where_set(parser: argparse.ArgumentParser) -> None:
-    sub = parser.add_subparsers()
-    where_parser = sub.add_parser("where", aliases=["w"])
-    add_consumable_id_arg(where_parser, "where")
-    add_consumable_arguments(where_parser, "where")
-    where_sub = where_parser.add_subparsers()
-    set_parser = where_sub.add_parser("set", aliases=["s"])
-    add_consumable_arguments(set_parser, "set")
+# Series Parsing
 
-# parser.add_argument("-S", "--personnel", dest="personnel", nargs='*', default=[], metavar="ID ROLE", help="list of personnel id (corresponding to existing personnel entities) and role name pairs, e.g. 123 Author 42 Illustrator")
-# cons_parser.add_argument("-c", "--continue", dest="increment", action="store_true", help="increment provided major part and minor part values instead of setting on update")
-# cons_parser.add_argument("-f", "--finish", dest="finish", action="store_true", help="finish consuming, setting end date as present date on first completion and adding a completion")
+
+def add_series_parsers(sub_parsers: argparse._SubParsersAction) -> None:
+    series_parser: argparse.ArgumentParser = sub_parsers.add_parser(
+        "series", aliases=["s"], help="action on series entities")
+    series_parser.set_defaults(handler=SeriesHandler)
+    sub_series_parsers = series_parser.add_subparsers()
+    # New Series
+    series_parser_new = sub_series_parsers.add_parser(
+        "new", aliases=["n"], help="create a new series")
+    series_parser_new.set_defaults(mode="new")
+    add_series_arguments(series_parser_new, "new")
+    # List Series
+    series_parser_list = sub_series_parsers.add_parser(
+        "list", aliases=["l"], help="list series")
+    series_parser_list.set_defaults(mode="list")
+    series_parser_list.add_argument("-o", "--order", dest="order",
+                                    choices=SeriesHandler.ORDER_LIST, default="name", help="order by attribute")
+    series_parser_list.add_argument(
+        "--rv", "--reverse", dest="reverse", action="store_true", help="reverse order of listing")
+    add_series_id_arg(series_parser_list, "where")
+    add_series_arguments(series_parser_list, "where")
+    # Update Series
+    series_parser_update = sub_series_parsers.add_parser(
+        "update", aliases=["u"], help="update existing series")
+    series_parser_update.set_defaults(mode="update")
+    add_where_set(series_parser_update,
+                  add_series_id_arg, add_series_arguments)
+    # Delete Series
+    series_parser_delete = sub_series_parsers.add_parser(
+        "delete", aliases=["d"], help="delete existing series")
+    series_parser_delete.set_defaults(mode="delete")
+    add_series_id_arg(series_parser_delete, "where")
+    add_series_arguments(series_parser_delete, "where")
+
+
+def add_series_id_arg(parser: argparse.ArgumentParser, dest: str) -> None:
+    parser.add_argument("-i", "--id", type=int,
+                        dest=f"{dest}.id", action=SubNamespaceAction, default=argparse.SUPPRESS, help="unique series id")
+
+
+def add_series_arguments(parser: argparse.ArgumentParser, dest: str) -> None:
+    parser.add_argument("-n", "--name", dest=f"{dest}.name", action=SubNamespaceAction,
+                        default=argparse.SUPPRESS, metavar="NAME", help="series name")
+
 
 # Personnel Parsing
 
 
 def add_personnel_parsers(sub_parsers: argparse._SubParsersAction) -> None:
-    personnel_parser = sub_parsers.add_parser(
+    personnel_parser: argparse.ArgumentParser = sub_parsers.add_parser(
         "personnel", aliases=["p"], help="action on personnel entities")
     personnel_parser.set_defaults(handler=PersonnelHandler)
-    # New Personnel
-    # List Personnel
-    # Update Personnel
-    # Delete Personnel
-
-# personnel_parser.add_argument("-i", "--id", type=int, dest="id", action=SubNamespaceAction, default=argparse.SUPPRESS, help="unique personnel id")
-# personnel_parser.add_argument("--fn", "--firstname", dest="first_name", action=SubNamespaceAction, default=argparse.SUPPRESS, help="personnel first name")
-# personnel_parser.add_argument("--ln", "--lastname", dest="last_name", action=SubNamespaceAction, default=argparse.SUPPRESS, help="personnel last name")
-# personnel_parser.add_argument("--ps", "--pseudonym", dest="pseudonym", action=SubNamespaceAction, default=argparse.SUPPRESS, help="personnel pseudonym")
-# # Commands
-# personnel_parser.add_argument("-o", "--order", choices=["id", "first_name", "last_name", "pseudonym"], default="first_name", help="order by attribute, used when listing")
-# personnel_parser.add_argument("--reverse", action="store_true", help="reverse order of listing")
-
-# Series Parsing
-
-
-def add_series_parsers(sub_parsers: argparse._SubParsersAction) -> None:
-    series_parser = sub_parsers.add_parser(
-        "series", aliases=["s"], help="action on series entities")
-    series_parser.set_defaults(handler=SeriesHandler)
+    sub_personnel_parsers = personnel_parser.add_subparsers()
     # New Series
+    personnel_parser_new = sub_personnel_parsers.add_parser(
+        "new", aliases=["n"], help="create new personnel")
+    personnel_parser_new.set_defaults(mode="new")
+    add_personnel_arguments(personnel_parser_new, "new")
     # List Series
+    personnel_parser_list = sub_personnel_parsers.add_parser(
+        "list", aliases=["l"], help="list personnel")
+    personnel_parser_list.set_defaults(mode="list")
+    personnel_parser_list.add_argument("-o", "--order", dest="order",
+                                       choices=PersonnelHandler.ORDER_LIST, default="first_name", help="order by attribute")
+    personnel_parser_list.add_argument(
+        "--rv", "--reverse", dest="reverse", action="store_true", help="reverse order of listing")
+    add_personnel_id_arg(personnel_parser_list, "where")
+    add_personnel_arguments(personnel_parser_list, "where")
     # Update Series
+    personnel_parser_update = sub_personnel_parsers.add_parser(
+        "update", aliases=["u"], help="update existing personnel")
+    personnel_parser_update.set_defaults(mode="update")
+    add_where_set(personnel_parser_update,
+                  add_personnel_id_arg, add_personnel_arguments)
     # Delete Series
+    personnel_parser_delete = sub_personnel_parsers.add_parser(
+        "delete", aliases=["d"], help="delete existing personnel")
+    personnel_parser_delete.set_defaults(mode="delete")
+    add_personnel_id_arg(personnel_parser_delete, "where")
+    add_personnel_arguments(personnel_parser_delete, "where")
+
+
+def add_personnel_id_arg(parser: argparse.ArgumentParser, dest: str) -> None:
+    parser.add_argument("-i", "--id", type=int,
+                        dest=f"{dest}.id", action=SubNamespaceAction, default=argparse.SUPPRESS, help="unique personnel id")
+
+
+def add_personnel_arguments(parser: argparse.ArgumentParser, dest: str) -> None:
+    parser.add_argument("-f", "--firstname", dest=f"{dest}.first_name", action=SubNamespaceAction,
+                        default=argparse.SUPPRESS, metavar="FIRST NAME", help="personnel first name")
+    parser.add_argument("-l", "--lastname", dest=f"{dest}.last_name", action=SubNamespaceAction,
+                        default=argparse.SUPPRESS, metavar="LAST NAME", help="personnel last name")
+    parser.add_argument("-p", "--pseudonym", dest=f"{dest}.pseudonym", action=SubNamespaceAction,
+                        default=argparse.SUPPRESS, metavar="PSEUDONYM", help="personnel pseudonym")

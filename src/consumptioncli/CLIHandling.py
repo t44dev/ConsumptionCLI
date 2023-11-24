@@ -1,11 +1,16 @@
 # General Imports
 from argparse import ArgumentError, Namespace
 from datetime import datetime
+from collections.abc import Sequence
 from abc import abstractmethod, ABC
 from tabulate import tabulate
+from sqlite3 import IntegrityError
 
 # Consumption Imports
-from consumptionbackend.Consumable import Consumable, Status
+from consumptionbackend.Consumable import Consumable
+from consumptionbackend.Status import Status
+from consumptionbackend.Series import Series
+from consumptionbackend.Personnel import Personnel
 from .utils import sort_by, request_input, confirm_action
 
 
@@ -77,7 +82,7 @@ class ConsumableHandler(CLIHandler):
         cls._prepare_args(args, new)
         consumable = Consumable.new(**vars(new))
         # Create String
-        return cls._tabulate_consumable([consumable], getattr(args, "date_format"))
+        return cls._tabulate([consumable], getattr(args, "date_format"))
 
     @classmethod
     def cli_list(cls, args: Namespace) -> str:
@@ -91,7 +96,7 @@ class ConsumableHandler(CLIHandler):
             args, "order"), getattr(args, "reverse"))
         results = len(consumables)
         if results > 0:
-            return cls._tabulate_consumable(consumables, getattr(args, "date_format")) + f"\n{results} Result(s)..."
+            return cls._tabulate(consumables, getattr(args, "date_format")) + f"\n{results} Result(s)..."
         else:
             return "0 Results..."
 
@@ -121,7 +126,7 @@ class ConsumableHandler(CLIHandler):
             updated_consumables.append(
                 consumables[0].update_self(vars(set_mapping)))
         if len(updated_consumables) > 0:
-            return cls._tabulate_consumable(updated_consumables, getattr(args, "date_format"))
+            return cls._tabulate(updated_consumables, getattr(args, "date_format"))
         else:
             return "No Consumable(s) updated."
 
@@ -146,14 +151,26 @@ class ConsumableHandler(CLIHandler):
             consumables[0].delete_self()
             deleted += 1
         return f"{deleted} Consumables deleted."
+    
+    @classmethod
+    def cli_start(cls, args: Namespace) -> str:
+        pass
 
+    @classmethod
+    def cli_continue(cls, args: Namespace) -> str:
+        pass
+
+    @classmethod
+    def cli_finish(cls, args: Namespace) -> str:
+        pass
+    
     @classmethod
     def no_action(cls, args: Namespace) -> str:
         raise ArgumentError(
             None, "An action action must be selected e.g. cons consuamble new")
 
     @classmethod
-    def _tabulate_consumable(cls, instances: list[Consumable], date_format: str = r"%Y/%m/%d") -> str:
+    def _tabulate(cls, instances: Sequence[Consumable], date_format: str = r"%Y/%m/%d") -> str:
         instances = [[row+1, i.id, i.type, i.name, i.parts, i.rating, i.completions, i.status.name,
                       datetime.fromtimestamp(i.start_date).strftime(
                           date_format) if i.start_date else i.start_date,
@@ -234,56 +251,214 @@ class ConsumableHandler(CLIHandler):
 
 class SeriesHandler(CLIHandler):
 
+    ORDER_LIST = ["name"]
+
     @classmethod
     def handle(cls, args: Namespace) -> str:
-        pass
+        match getattr(args, "mode"):
+            case "new":
+                return cls.cli_new(args)
+            case "list":
+                return cls.cli_list(args)
+            case "update":
+                return cls.cli_update(args)
+            case "delete":
+                return cls.cli_delete(args)
+            case _:
+                return cls.no_action(args)
 
     @classmethod
     def cli_new(cls, args: Namespace) -> str:
-        pass
+        new = getattr(args, "new", Namespace())
+        # Get mandatory args
+        mandatory_args = ["name"]
+        for arg in mandatory_args:
+            if arg not in new:
+                value = request_input(arg)
+                setattr(new, arg, value)
+        # Create
+        series = Series.new(**vars(new))
+        # Create String
+        return cls._tabulate([series])
 
     @classmethod
     def cli_list(cls, args: Namespace) -> str:
-        pass
+        where = getattr(args, "where", Namespace())
+        # Create String
+        series = Series.find(**vars(where))
+        # Ordering
+        series = sort_by(series, getattr(
+            args, "order"), getattr(args, "reverse"))
+        results = len(series)
+        if results > 0:
+            return cls._tabulate(series) + f"\n{results} Result(s)..."
+        else:
+            return "0 Results..."
 
     @classmethod
     def cli_update(cls, args: Namespace) -> str:
-        pass
+        where_mapping = getattr(args, "where", Namespace())
+        set_mapping = getattr(args, "set", Namespace())
+        if len(vars(set_mapping)) == 0:
+            raise ArgumentError(
+                None, "Values to set must be non-empty. e.g. cons series update where set --name A")
+        # Find
+        series = Series.find(**vars(where_mapping))
+        # Update
+        updated_series = []
+        if len(series) == 0:
+            return "No Series matching where conditions."
+        elif len(series) > 1:
+            for ser in series:
+                if confirm_action(f"update of {str(ser)}"):
+                    updated_series.append(
+                        ser.update_self(vars(set_mapping)))
+        # Create String
+        else:
+            updated_series.append(
+                series[0].update_self(vars(set_mapping)))
+        if len(updated_series) > 0:
+            return cls._tabulate(updated_series) 
+        else:
+            return "No Series updated."
 
     @classmethod
     def cli_delete(cls, args: Namespace) -> str:
-        pass
+        where = getattr(args, "where", Namespace())
+        # Find
+        series = Series.find(**vars(where))
+        # Delete
+        deleted = 0        
+        if len(series) == 0:
+            return "No Series matching where conditions."
+        elif len(series) > 1:
+            for ser in series:
+                if confirm_action(f"deletion of {str(ser)}"):
+                    try:
+                        ser.delete_self()
+                        deleted += 1
+                    except IntegrityError as e:
+                        print(f"{deleted} Series deleted.")
+                        raise ArgumentError(None, "Cannot delete Series with -1 ID") 
+        # Create String
+        else:
+            try:
+                series[0].delete_self()
+                deleted += 1
+            except IntegrityError as e:
+                print(f"{deleted} Series deleted.")
+                raise ArgumentError(None, "Cannot delete Series with -1 ID") 
+        return f"{deleted} Series deleted."
 
     @classmethod
     def no_action(cls, args: Namespace) -> str:
-        pass
+        raise ArgumentError(
+            None, "An action action must be selected e.g. cons series new")
+
+    @classmethod
+    def _tabulate(cls, instances : Sequence[Series]) -> str:
+        instances = [[row+1, i.id, i.name] for row, i in enumerate(instances)]
+        return tabulate(instances, headers=["#", "ID", "Name"])
 
 
 class PersonnelHandler(CLIHandler):
 
+    ORDER_LIST = ["first_name", "last_name", "pseudonym"]
+
     @classmethod
     def handle(cls, args: Namespace) -> str:
-        pass
+        match getattr(args, "mode"):
+            case "new":
+                return cls.cli_new(args)
+            case "list":
+                return cls.cli_list(args)
+            case "update":
+                return cls.cli_update(args)
+            case "delete":
+                return cls.cli_delete(args)
+            case _:
+                return cls.no_action(args)
 
     @classmethod
     def cli_new(cls, args: Namespace) -> str:
-        pass
+        new = getattr(args, "new", Namespace())
+        if len(vars(new)) == 0:
+            raise ArgumentError(None, "One of the valid values must be set. i.e. first_name, last_name or pseudonym.")
+        # Create
+        personnel = Personnel.new(**vars(new))
+        # Create String
+        return cls._tabulate([personnel])
 
     @classmethod
     def cli_list(cls, args: Namespace) -> str:
-        pass
+        where = getattr(args, "where", Namespace())
+        # Create String
+        personnel = Personnel.find(**vars(where))
+        # Ordering
+        personnel = sort_by(personnel, getattr(
+            args, "order"), getattr(args, "reverse"))
+        results = len(personnel)
+        if results > 0:
+            return cls._tabulate(personnel) + f"\n{results} Result(s)..."
+        else:
+            return "0 Results..."
 
     @classmethod
     def cli_update(cls, args: Namespace) -> str:
-        pass
+        where_mapping = getattr(args, "where", Namespace())
+        set_mapping = getattr(args, "set", Namespace())
+        if len(vars(set_mapping)) == 0:
+            raise ArgumentError(
+                None, "Values to set must be non-empty. e.g. cons personnel update where set --firstname A")
+        # Find
+        personnel = Personnel.find(**vars(where_mapping))
+        # Update
+        updated_series = []
+        if len(personnel) == 0:
+            return "No Personnel matching where conditions."
+        elif len(personnel) > 1:
+            for pers in personnel:
+                if confirm_action(f"update of {str(pers)}"):
+                    updated_series.append(
+                        pers.update_self(vars(set_mapping)))
+        # Create String
+        else:
+            updated_series.append(
+                personnel[0].update_self(vars(set_mapping)))
+        if len(updated_series) > 0:
+            return cls._tabulate(updated_series) 
+        else:
+            return "No Personnel updated."
 
     @classmethod
     def cli_delete(cls, args: Namespace) -> str:
-        pass
+        where = getattr(args, "where", Namespace())
+        # Find
+        personnel = Personnel.find(**vars(where))
+        # Delete
+        deleted = 0        
+        if len(personnel) == 0:
+            return "No Personnel matching where conditions."
+        elif len(personnel) > 1:
+            for pers in personnel:
+                if confirm_action(f"deletion of {str(pers)}"):
+                    pers.delete_self()
+                    deleted += 1
+        # Create String
+        else:
+            personnel[0].delete_self()
+            deleted += 1
+        return f"{deleted} Personnel deleted."
 
     @classmethod
     def no_action(cls, args: Namespace) -> str:
-        pass
+        raise ArgumentError(
+            None, "An action action must be selected e.g. cons personnel new")
+
+    @classmethod
+    def _tabulate(cls, instances : Sequence[Personnel]) -> str:
+        instances = [[row+1, i.id, i.first_name, i.pseudonym, i.last_name] for row, i in enumerate(instances)]
+        return tabulate(instances, headers=["#", "ID", "First Name", "Pseudonym", "Last Name"])
 
     # @classmethod
     # def cli_list(cls, ent: Type[Staff], subdict: dict, **kwargs) -> str:

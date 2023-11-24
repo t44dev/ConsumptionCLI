@@ -3,7 +3,7 @@
 - [x] Dev branch
 - [ ] Tags
 - [ ] *Series* implementation
-- [ ] *Set/Find* seperation and *Find* on any field
+- [x] *Set/Find* seperation and *Find* on any field
 - [ ] *Staff* full implementation
 - [ ] *List* Cursor interaction
 - [ ] Input on missing mandatory values
@@ -11,10 +11,12 @@
 - [ ] CI/CD
 
 ### Minor
+- [ ] Total parts
 - [ ] Force flag on update and delete
 - [ ] Delete returns deleted records
 
 ## Next
+- [ ] Abstractions
 - [ ] Dataclasses/Attrs
 - [ ] Further Tests
 - [ ] Log file
