@@ -22,6 +22,9 @@ class SubNamespaceAction(Action):
         dest = dests.pop()
         current = namespace
         for name in dests:
-            setattr(current, name, Namespace())
-            current = getattr(current, name)
+            if name in current:
+                current = getattr(current, name)
+            else:
+                setattr(current, name, Namespace())
+                current = getattr(current, name)
         setattr(current, dest, values)

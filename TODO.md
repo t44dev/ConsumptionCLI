@@ -15,3 +15,4 @@
 - [ ] Further Tests
 - [ ] Log file
 - [ ] Import from...
+- [ ] SQL to dedicated script file that is read from
