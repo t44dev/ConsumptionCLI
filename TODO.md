@@ -16,6 +16,7 @@
 - [ ] Delete returns deleted records
 
 ## Next
+- [ ] "View" page for entities
 - [ ] Abstractions
 - [ ] Dataclasses/Attrs
 - [ ] Further Tests

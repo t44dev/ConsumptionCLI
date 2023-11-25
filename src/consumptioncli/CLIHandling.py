@@ -66,6 +66,10 @@ class ConsumableHandler(CLIHandler):
                 return cls.cli_update(args)
             case "delete":
                 return cls.cli_delete(args)
+            case "tag":
+                return cls.cli_tag(args)
+            case "untag":
+                return cls.cli_untag(args)
             case _:
                 return cls.no_action(args)
 
@@ -121,10 +125,10 @@ class ConsumableHandler(CLIHandler):
                 if confirm_action(f"update of {str(consumable)}"):
                     updated_consumables.append(
                         consumable.update_self(vars(set_mapping)))
-        # Create String
         else:
             updated_consumables.append(
                 consumables[0].update_self(vars(set_mapping)))
+        # Create String
         if len(updated_consumables) > 0:
             return cls._tabulate(updated_consumables, getattr(args, "date_format"))
         else:
@@ -146,10 +150,10 @@ class ConsumableHandler(CLIHandler):
                 if confirm_action(f"deletion of {str(consumable)}"):
                     consumable.delete_self()
                     deleted += 1
-        # Create String
         else:
             consumables[0].delete_self()
             deleted += 1
+        # Create String
         return f"{deleted} Consumables deleted."
     
     @classmethod
@@ -163,7 +167,55 @@ class ConsumableHandler(CLIHandler):
     @classmethod
     def cli_finish(cls, args: Namespace) -> str:
         pass
+
+    @classmethod
+    def cli_tag(cls, args: Namespace) -> str:
+        where = getattr(args, "where", Namespace())
+        if "tag" in args:
+            tag = getattr(args, "tag")
+        else:
+            tag = request_input("tag")
+        # Find
+        consumables = Consumable.find(**vars(where))
+        # Tag
+        tagged = 0
+        if len(consumables) == 0:
+            return "No Consumables matching where conditions."
+        elif len(consumables) > 1:
+            for consumable in consumables:
+                if confirm_action(f"tagging of {str(consumable)} with '{tag}'"):
+                    if consumable.add_tag(tag):
+                        tagged +=1
+        else:
+            consumables[0].add_tag(tag)
+            tagged += 1
+        # Create string 
+        return f"{tagged} Consumable(s) tagged."
     
+    @classmethod
+    def cli_untag(cls, args: Namespace) -> str:
+        where = getattr(args, "where", Namespace())
+        if "tag" in args:
+            tag = getattr(args, "tag")
+        else:
+            tag = request_input("tag")
+        # Find
+        consumables = Consumable.find(**vars(where))
+        # Untag
+        untagged = 0
+        if len(consumables) == 0:
+            return "No Consumables matching where conditions."
+        elif len(consumables) > 1:
+            for consumable in consumables:
+                if confirm_action(f"removal of tag '{tag}' from {str(consumable)}"):
+                    if consumable.remove_tag(tag):
+                        untagged +=1
+        else:
+            consumables[0].remove_tag(tag)
+            untagged += 1
+        # Create string 
+        return f"{untagged} Consumable(s) untagged."
+
     @classmethod
     def no_action(cls, args: Namespace) -> str:
         raise ArgumentError(
@@ -196,6 +248,10 @@ class ConsumableHandler(CLIHandler):
         # Status
         if "status" in values:
             setattr(values, "status", Status[getattr(values, "status")])
+        # Tags
+        if "tags" in values:
+            tags = (getattr(values, "tags")).split(",")
+            setattr(values, "tags", tags)
 
     # @classmethod
     # def add_staff(cls, ent : Consumable, staff_list : list[str]):
@@ -301,7 +357,7 @@ class SeriesHandler(CLIHandler):
         set_mapping = getattr(args, "set", Namespace())
         if len(vars(set_mapping)) == 0:
             raise ArgumentError(
-                None, "Values to set must be non-empty. e.g. cons series update where set --name A")
+                None, "Values to set must be non-empty. e.g. cons series update set --name A")
         # Find
         series = Series.find(**vars(where_mapping))
         # Update
