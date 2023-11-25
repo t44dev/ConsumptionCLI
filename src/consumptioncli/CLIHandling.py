@@ -70,6 +70,8 @@ class ConsumableHandler(CLIHandler):
                 return cls.cli_tag(args)
             case "untag":
                 return cls.cli_untag(args)
+            case "set_series":
+                return cls.cli_series(args)
             case _:
                 return cls.no_action(args)
 
@@ -110,7 +112,7 @@ class ConsumableHandler(CLIHandler):
         set_mapping = getattr(args, "set", Namespace())
         if len(vars(set_mapping)) == 0:
             raise ArgumentError(
-                None, "Values to set must be non-empty. e.g. cons consumable update where set --name A")
+                None, "Values to set must be non-empty. e.g. cons consumable update set --name A")
         # Prepare Arguments
         cls._prepare_args(args, where_mapping)
         cls._prepare_args(args, set_mapping)
@@ -215,6 +217,42 @@ class ConsumableHandler(CLIHandler):
             untagged += 1
         # Create string 
         return f"{untagged} Consumable(s) untagged."
+    
+    @classmethod
+    def cli_series(cls, args : Namespace) -> str:
+        where = getattr(args, "where", Namespace())
+        series_where = getattr(args, "series", Namespace())
+        if len(vars(series_where)) == 0:
+            raise ArgumentError(
+                None, "Series to set must be specified e.g. cons consumable series set --name S")
+        # Get Series
+        series = Series.find(**vars(series_where))
+        set_series = None
+        if len(series) == 0:
+            return "No Series matching conditions."
+        elif len(series) > 1:
+            for ser in series:
+                if confirm_action(f"usage of {str(ser)} as Series to set"):
+                    set_series = ser
+                    break
+            if set_series is None:
+                return "No Series selected."
+        else:
+            set_series = series[0]
+        # Set Series
+        consumables = Consumable.find(**vars(where))
+        consumables_altered = 0
+        if len(consumables) == 0:
+            return "No Consumables matching conditions."
+        elif len(consumables) > 1:
+            for consumable in consumables:
+                if confirm_action(f"setting Series of {str(consumable)} to {str(set_series)}"):
+                    consumable.set_series(set_series)
+                    consumables_altered += 1
+        else:
+            consumables[0].set_series(set_series)
+            consumables_altered += 1
+        return f"Series for {consumables_altered} Consumables updated"
 
     @classmethod
     def no_action(cls, args: Namespace) -> str:
@@ -465,7 +503,7 @@ class PersonnelHandler(CLIHandler):
         set_mapping = getattr(args, "set", Namespace())
         if len(vars(set_mapping)) == 0:
             raise ArgumentError(
-                None, "Values to set must be non-empty. e.g. cons personnel update where set --firstname A")
+                None, "Values to set must be non-empty. e.g. cons personnel update set --firstname A")
         # Find
         personnel = Personnel.find(**vars(where_mapping))
         # Update

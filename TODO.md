@@ -1,7 +1,7 @@
 # TODO LIST
 ## Current
 - [x] Dev branch
-- [ ] Tags
+- [x] Tags
 - [ ] *Series* implementation
 - [x] *Set/Find* seperation and *Find* on any field
 - [ ] *Staff* full implementation
@@ -10,10 +10,12 @@
 - [ ] Setup/Update script
 - [ ] CI/CD
 
-### Minor
+## Minor
 - [ ] Total parts
 - [ ] Force flag on update and delete
 - [ ] Delete returns deleted records
+- [ ] Streamline filtering of tables
+- [ ] Classes in parsers.py for better SOC
 
 ## Next
 - [ ] "View" page for entities

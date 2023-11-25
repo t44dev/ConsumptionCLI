@@ -71,13 +71,19 @@ def add_consumable_parsers(sub_parsers: argparse._SubParsersAction) -> None:
     cons_parser_untag.set_defaults(mode="untag")
     cons_parser_untag.add_argument("--tag", dest="tag", default=argparse.SUPPRESS, help="tag to remove")
     where_args_consumable(cons_parser_untag)
+    # Set Series
+    cons_parser_series = sub_cons_parsers.add_parser("series", aliases=["ss"], help="set series of existing consumable")
+    cons_parser_series.set_defaults(mode="set_series")
+    where_args_consumable(cons_parser_series)
+    set_parser = cons_parser_series.add_subparsers().add_parser("set")
+    where_args_series(set_parser, "series")
 
 
 def where_args_consumable(parser: argparse.ArgumentParser, dest: str = "where") -> None:
     parser.add_argument("-i", "--id", type=int,
                         dest=f"{dest}.id", action=SubNamespaceAction, default=argparse.SUPPRESS, help="unique consumable id")
     parser.add_argument("--tg", "--tags", dest=f"{dest}.tags", action=SubNamespaceAction,
-                        default=argparse.SUPPRESS, metavar="TAGS", help="comma separated tags like e.g. --tags tag1,tag2,tag3")
+                        default=argparse.SUPPRESS, metavar="TAGS", help="comma separated tags e.g. --tags tag1,tag2,tag3")
     _consumable_args(parser, dest)
 
 
