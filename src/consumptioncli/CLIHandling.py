@@ -72,6 +72,13 @@ class ConsumableHandler(CLIHandler):
                 return cls.cli_untag(args)
             case "set_series":
                 return cls.cli_series(args)
+            case "personnel":
+                raise ArgumentError(
+                    None, "Must select an action. e.g. cons consumable personnel add --name John")
+            case "add_personnel":
+                return cls.cli_add_personnel(args)
+            case "remove_personnel":
+                return cls.cli_remove_personnel(args)
             case _:
                 return cls.no_action(args)
 
@@ -144,7 +151,7 @@ class ConsumableHandler(CLIHandler):
         # Find
         consumables = Consumable.find(**vars(where))
         # Delete
-        deleted = 0        
+        deleted = 0
         if len(consumables) == 0:
             return "No Consumables matching where conditions."
         elif len(consumables) > 1:
@@ -157,7 +164,7 @@ class ConsumableHandler(CLIHandler):
             deleted += 1
         # Create String
         return f"{deleted} Consumables deleted."
-    
+
     @classmethod
     def cli_start(cls, args: Namespace) -> str:
         pass
@@ -187,13 +194,13 @@ class ConsumableHandler(CLIHandler):
             for consumable in consumables:
                 if confirm_action(f"tagging of {str(consumable)} with '{tag}'"):
                     if consumable.add_tag(tag):
-                        tagged +=1
+                        tagged += 1
         else:
             consumables[0].add_tag(tag)
             tagged += 1
-        # Create string 
+        # Create string
         return f"{tagged} Consumable(s) tagged."
-    
+
     @classmethod
     def cli_untag(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
@@ -211,15 +218,15 @@ class ConsumableHandler(CLIHandler):
             for consumable in consumables:
                 if confirm_action(f"removal of tag '{tag}' from {str(consumable)}"):
                     if consumable.remove_tag(tag):
-                        untagged +=1
+                        untagged += 1
         else:
             consumables[0].remove_tag(tag)
             untagged += 1
-        # Create string 
+        # Create string
         return f"{untagged} Consumable(s) untagged."
-    
+
     @classmethod
-    def cli_series(cls, args : Namespace) -> str:
+    def cli_series(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
         series_where = getattr(args, "series", Namespace())
         if len(vars(series_where)) == 0:
@@ -253,6 +260,84 @@ class ConsumableHandler(CLIHandler):
             consumables[0].set_series(set_series)
             consumables_altered += 1
         return f"Series for {consumables_altered} Consumables updated"
+
+    @classmethod
+    def cli_add_personnel(cls, args: Namespace) -> str:
+        where = getattr(args, "where", Namespace())
+        personnel_where = getattr(args, "personnel", Namespace())
+        if "role" in args:
+            role = getattr(args, "role")
+        else:
+            role = request_input("Personnel role")
+        # Get Personnel/Consumables
+        personnel = Personnel.find(**vars(personnel_where))
+        selected_personnel = []
+        consumables = Consumable.find(**vars(where))
+        consumables_altered = 0
+        if len(personnel) == 0:
+            return "No Personnel matching conditions."
+        if len(consumables) == 0:
+            return "No Consumables matching where conditions."
+        # Confirmations
+        if len(personnel) > 1:
+            for pers in personnel:
+                if confirm_action(f"selection of {str(pers)}"):
+                    pers.role = role
+                    selected_personnel.append(pers)
+        else:
+            personnel[0].role = role
+            selected_personnel = personnel
+        # Add to Consumables
+        if len(consumables) > 1:
+            for consumable in consumables:
+                if confirm_action(f"adding selected Personnel to {str(consumable)} as '{role}'"):
+                    for pers_add in selected_personnel:
+                        if consumable.add_personnel(pers_add):
+                            consumables_altered += 1
+        else:
+            for pers_add in selected_personnel:
+                if consumables[0].add_personnel(pers_add):
+                    consumables_altered += 1
+        return f"{len(selected_personnel)} Personnel added to {consumables_altered} Consumable(s) as '{role}'."
+
+    @classmethod
+    def cli_remove_personnel(cls, args: Namespace) -> str:
+        where = getattr(args, "where", Namespace())
+        personnel_where = getattr(args, "personnel", Namespace())
+        if "role" in args:
+            role = getattr(args, "role")
+        else:
+            role = request_input("Personnel role")
+        # Get Personnel/Consumables
+        personnel = Personnel.find(**vars(personnel_where))
+        selected_personnel = []
+        consumables = Consumable.find(**vars(where))
+        consumables_altered = 0
+        if len(personnel) == 0:
+            return "No Personnel matching conditions."
+        if len(consumables) == 0:
+            return "No Consumables matching where conditions."
+        # Confirmations
+        if len(personnel) > 1:
+            for pers in personnel:
+                if confirm_action(f"selection of {str(pers)}"):
+                    pers.role = role
+                    selected_personnel.append(pers)
+        else:
+            personnel[0].role = role
+            selected_personnel = personnel
+        # Add to Consumables
+        if len(consumables) > 1:
+            for consumable in consumables:
+                if confirm_action(f"removal of selected Personnel from {str(consumable)}"):
+                    for pers_remove in selected_personnel:
+                        if consumable.remove_personnel(pers_remove):
+                            consumables_altered += 1
+        else:
+            for pers_remove in selected_personnel:
+                if consumables[0].remove_personnel(pers_remove):
+                    consumables_altered += 1
+        return f"{len(selected_personnel)} Personnel removed from {consumables_altered} Consumable(s)'."
 
     @classmethod
     def no_action(cls, args: Namespace) -> str:
@@ -292,19 +377,6 @@ class ConsumableHandler(CLIHandler):
             setattr(values, "tags", tags)
 
     # @classmethod
-    # def add_staff(cls, ent : Consumable, staff_list : list[str]):
-        # if len(staff_list) % 2 != 0:
-            # raise ArgumentError(None, "Staff arguments must be passed in id, Role pairs. e.g. -S 2 Author 3 Illustrator.")
-        # try:
-            # staff_list = [(int(staff_list[i]), staff_list[i+1]) for i in range(0, len(staff_list), 2)]
-            # for staff in staff_list:
-            # ent.toggle_staff(staff[0], staff[1])
-        # except ValueError:
-            # raise ArgumentError(None, "Staff arguments must be passed in id, Role pairs. e.g. -S 2 Author 3 Illustrator.")
-        # except TypeError:
-            # raise ArgumentError(None, "Staff id must exist within the database.")
-
-    # @classmethod
     # def cli_update(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
         # instance = cls.get_ent(ent, subdict)
         # # Handle increment
@@ -333,14 +405,6 @@ class ConsumableHandler(CLIHandler):
         # instance.save()
         # cls.add_staff(instance, kwargs["staff"])
         # return cls._cli_tabulate([instance], kwargs["date_format"])
-
-    # @classmethod
-    # def cli_delete(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
-        # try:
-            # cls._handle_type_conversion(subdict, kwargs["date_format"])
-        # except ValueError as e:
-            # raise ArgumentError(None, str(e))
-        # return super().cli_delete(ent, subdict, **kwargs)
 
 
 class SeriesHandler(CLIHandler):
@@ -412,7 +476,7 @@ class SeriesHandler(CLIHandler):
             updated_series.append(
                 series[0].update_self(vars(set_mapping)))
         if len(updated_series) > 0:
-            return cls._tabulate(updated_series) 
+            return cls._tabulate(updated_series)
         else:
             return "No Series updated."
 
@@ -422,7 +486,7 @@ class SeriesHandler(CLIHandler):
         # Find
         series = Series.find(**vars(where))
         # Delete
-        deleted = 0        
+        deleted = 0
         if len(series) == 0:
             return "No Series matching where conditions."
         elif len(series) > 1:
@@ -433,7 +497,8 @@ class SeriesHandler(CLIHandler):
                         deleted += 1
                     except IntegrityError as e:
                         print(f"{deleted} Series deleted.")
-                        raise ArgumentError(None, "Cannot delete Series with -1 ID") 
+                        raise ArgumentError(
+                            None, "Cannot delete Series with -1 ID")
         # Create String
         else:
             try:
@@ -441,7 +506,7 @@ class SeriesHandler(CLIHandler):
                 deleted += 1
             except IntegrityError as e:
                 print(f"{deleted} Series deleted.")
-                raise ArgumentError(None, "Cannot delete Series with -1 ID") 
+                raise ArgumentError(None, "Cannot delete Series with -1 ID")
         return f"{deleted} Series deleted."
 
     @classmethod
@@ -450,7 +515,7 @@ class SeriesHandler(CLIHandler):
             None, "An action action must be selected e.g. cons series new")
 
     @classmethod
-    def _tabulate(cls, instances : Sequence[Series]) -> str:
+    def _tabulate(cls, instances: Sequence[Series]) -> str:
         instances = [[row+1, i.id, i.name] for row, i in enumerate(instances)]
         return tabulate(instances, headers=["#", "ID", "Name"])
 
@@ -477,7 +542,8 @@ class PersonnelHandler(CLIHandler):
     def cli_new(cls, args: Namespace) -> str:
         new = getattr(args, "new", Namespace())
         if len(vars(new)) == 0:
-            raise ArgumentError(None, "One of the valid values must be set. i.e. first_name, last_name or pseudonym.")
+            raise ArgumentError(
+                None, "One of the valid values must be set. i.e. first_name, last_name or pseudonym.")
         # Create
         personnel = Personnel.new(**vars(new))
         # Create String
@@ -520,7 +586,7 @@ class PersonnelHandler(CLIHandler):
             updated_series.append(
                 personnel[0].update_self(vars(set_mapping)))
         if len(updated_series) > 0:
-            return cls._tabulate(updated_series) 
+            return cls._tabulate(updated_series)
         else:
             return "No Personnel updated."
 
@@ -530,7 +596,7 @@ class PersonnelHandler(CLIHandler):
         # Find
         personnel = Personnel.find(**vars(where))
         # Delete
-        deleted = 0        
+        deleted = 0
         if len(personnel) == 0:
             return "No Personnel matching where conditions."
         elif len(personnel) > 1:
@@ -550,16 +616,7 @@ class PersonnelHandler(CLIHandler):
             None, "An action action must be selected e.g. cons personnel new")
 
     @classmethod
-    def _tabulate(cls, instances : Sequence[Personnel]) -> str:
-        instances = [[row+1, i.id, i.first_name, i.pseudonym, i.last_name] for row, i in enumerate(instances)]
+    def _tabulate(cls, instances: Sequence[Personnel]) -> str:
+        instances = [[row+1, i.id, i.first_name, i.pseudonym, i.last_name]
+                     for row, i in enumerate(instances)]
         return tabulate(instances, headers=["#", "ID", "First Name", "Pseudonym", "Last Name"])
-
-    # @classmethod
-    # def cli_list(cls, ent: Type[Staff], subdict: dict, **kwargs) -> str:
-        # instances = cls.get_list_ents(ent, subdict, **kwargs)
-        # return cls._cli_tabulate(instances) + f"\n{len(instances)} Results..."
-
-    # @classmethod
-    # def _cli_tabulate(cls, instances : list[Staff]):
-        # instances = [[row+1, i.id, i.pseudonym, i.first_name, i.last_name] for row, i in enumerate(instances)]
-        # return tabulate(instances, headers=["#", "ID", "Pseudonym", "First Name", "Last Name"])

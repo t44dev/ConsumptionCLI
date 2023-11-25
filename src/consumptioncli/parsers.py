@@ -54,7 +54,8 @@ def add_consumable_parsers(sub_parsers: argparse._SubParsersAction) -> None:
         "update", aliases=["u"], help="update existing consumable")
     cons_parser_update.set_defaults(mode="update")
     where_args_personnel(cons_parser_update)
-    set_parser = cons_parser_update.add_subparsers().add_parser("set")
+    set_parser = cons_parser_update.add_subparsers().add_parser("set",
+                                                                aliases=["s"])
     set_args_consumable(set_parser)
     # Delete Consumable
     cons_parser_delete = sub_cons_parsers.add_parser(
@@ -62,21 +63,43 @@ def add_consumable_parsers(sub_parsers: argparse._SubParsersAction) -> None:
     cons_parser_delete.set_defaults(mode="delete")
     where_args_consumable(cons_parser_delete)
     # Tag Consumable
-    cons_parser_tag = sub_cons_parsers.add_parser("tag", aliases=["t"], help="add tag to existing consumable")
+    cons_parser_tag = sub_cons_parsers.add_parser(
+        "tag", aliases=["t"], help="add tag to existing consumable")
     cons_parser_tag.set_defaults(mode="tag")
-    cons_parser_tag.add_argument("--tag", dest="tag", default=argparse.SUPPRESS, help="tag to add")
+    cons_parser_tag.add_argument(
+        "--tag", dest="tag", default=argparse.SUPPRESS, help="tag to add")
     where_args_consumable(cons_parser_tag)
     # Untag Consumable
-    cons_parser_untag = sub_cons_parsers.add_parser("untag", aliases=["ut"], help="remove tag from existing consumable")
+    cons_parser_untag = sub_cons_parsers.add_parser(
+        "untag", aliases=["ut"], help="remove tag from existing consumable")
     cons_parser_untag.set_defaults(mode="untag")
-    cons_parser_untag.add_argument("--tag", dest="tag", default=argparse.SUPPRESS, help="tag to remove")
+    cons_parser_untag.add_argument(
+        "--tag", dest="tag", default=argparse.SUPPRESS, help="tag to remove")
     where_args_consumable(cons_parser_untag)
     # Set Series
-    cons_parser_series = sub_cons_parsers.add_parser("series", aliases=["ss"], help="set series of existing consumable")
+    cons_parser_series = sub_cons_parsers.add_parser(
+        "series", aliases=["ss"], help="set series of existing consumable")
     cons_parser_series.set_defaults(mode="set_series")
     where_args_consumable(cons_parser_series)
-    set_parser = cons_parser_series.add_subparsers().add_parser("set")
+    set_parser = cons_parser_series.add_subparsers().add_parser("set",
+                                                                aliases=["s"])
     where_args_series(set_parser, "series")
+    # Add/Remove Personnel
+    cons_parser_personnel = sub_cons_parsers.add_parser(
+        "personnel", aliases=["p"], help="manage personnel of existing consumable")
+    cons_parser_personnel.set_defaults(mode="personnel")
+    where_args_consumable(cons_parser_personnel)
+    sub_cons_parsers_personnel = cons_parser_personnel.add_subparsers()
+    add_parser = sub_cons_parsers_personnel.add_parser(
+        "add", aliases=["a"], help="add personnel")
+    add_parser.set_defaults(mode="add_personnel")
+    add_parser.add_argument("-r", "--role", dest="role", default=argparse.SUPPRESS, help="role to associate with added personnel")
+    where_args_personnel(add_parser, "personnel")
+    remove_parser = sub_cons_parsers_personnel.add_parser(
+        "remove", aliases=["r"], help="remove personnel")
+    remove_parser.set_defaults(mode="remove_personnel")
+    remove_parser.add_argument("-r", "--role", dest="role", default=argparse.SUPPRESS, help="personnel role for removal")
+    where_args_personnel(remove_parser, "personnel")
 
 
 def where_args_consumable(parser: argparse.ArgumentParser, dest: str = "where") -> None:
@@ -139,7 +162,8 @@ def add_series_parsers(sub_parsers: argparse._SubParsersAction) -> None:
         "update", aliases=["u"], help="update existing series")
     series_parser_update.set_defaults(mode="update")
     where_args_series(series_parser_update)
-    set_parser = series_parser_update.add_subparsers().add_parser("set")
+    set_parser = series_parser_update.add_subparsers().add_parser("set",
+                                                                  aliases=["s"])
     set_args_series(set_parser)
     # Delete Series
     series_parser_delete = sub_series_parsers.add_parser(
@@ -190,7 +214,8 @@ def add_personnel_parsers(sub_parsers: argparse._SubParsersAction) -> None:
         "update", aliases=["u"], help="update existing personnel")
     personnel_parser_update.set_defaults(mode="update")
     set_args_personnel(personnel_parser_update)
-    set_parser = personnel_parser_update.add_subparsers().add_parser("set")
+    set_parser = personnel_parser_update.add_subparsers().add_parser("set",
+                                                                     aliases=["s"])
     set_args_personnel(set_parser)
     # Delete Series
     personnel_parser_delete = sub_personnel_parsers.add_parser(

@@ -2,11 +2,11 @@
 ## Current
 - [x] Dev branch
 - [x] Tags
-- [ ] *Series* implementation
+- [x] *Series* implementation
 - [x] *Set/Find* seperation and *Find* on any field
-- [ ] *Staff* full implementation
+- [x] *Personnel* full implementation
 - [ ] *List* Cursor interaction
-- [ ] Input on missing mandatory values
+- [x] Input on missing mandatory values
 - [ ] Setup/Update script
 - [ ] CI/CD
 
