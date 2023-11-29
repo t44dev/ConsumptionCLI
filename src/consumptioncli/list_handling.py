@@ -5,6 +5,7 @@ import curses
 from collections.abc import Sequence, Mapping
 from typing import Callable, Tuple, TypeAlias
 from tabulate import tabulate
+from .utils import truncate
 
 # Consumption Imports
 from consumptionbackend.Database import DatabaseEntity
@@ -129,7 +130,7 @@ class ConsumableList(BaseInstanceList):
 
     def tabulate(self) -> str:
         instances: Sequence[Consumable] = self.state.instances
-        table_instances = [[row+1, i.id, i.type, i.name, f"{i.parts}/{'?' if i.max_parts is None else i.max_parts}", i.rating, i.completions, i.status.name,
+        table_instances = [[row+1, i.id, i.type, truncate(i.name), f"{i.parts}/{'?' if i.max_parts is None else i.max_parts}", i.rating, i.completions, i.status.name,
                             datetime.fromtimestamp(i.start_date).strftime(
                                 self.date_format) if i.start_date else i.start_date,
                             datetime.fromtimestamp(i.end_date).strftime(self.date_format) if i.end_date else i.end_date] for row, i in enumerate(instances)]

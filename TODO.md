@@ -7,18 +7,16 @@
 - [x] *Personnel* full implementation
 - [x] Interactive *List* 
 - [x] Input on missing mandatory values
+- [x] Total parts
 - [ ] Setup/Update script
 - [ ] CI/CD
 
-## Minor
-- [x] Total parts
-- [ ] Force flag on update and delete
-- [ ] Delete returns deleted records
-- [ ] Streamline filtering of tables
-- [ ] Classes in parsers.py for better SOC
-
 ## Next
+- [ ] Classes in parsers.py for better SOC
+- [ ] Force flag on update and delete
 - [ ] "View" page for entities
+- [ ] Streamline filtering of tables (refactor)
+- [ ] Delete returns deleted records
 - [ ] Abstractions
 - [ ] Dataclasses/Attrs
 - [ ] Further Tests
