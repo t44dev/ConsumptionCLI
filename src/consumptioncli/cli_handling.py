@@ -1,9 +1,7 @@
 # General Imports
 from argparse import ArgumentError, Namespace
 from datetime import datetime
-from collections.abc import Sequence
 from abc import abstractmethod, ABC
-from tabulate import tabulate
 from sqlite3 import IntegrityError
 
 # Consumption Imports
@@ -11,6 +9,7 @@ from consumptionbackend.Consumable import Consumable
 from consumptionbackend.Status import Status
 from consumptionbackend.Series import Series
 from consumptionbackend.Personnel import Personnel
+from .list_handling import ConsumableList, SeriesList, PersonnelList
 from .utils import sort_by, request_input, confirm_action
 
 
@@ -95,7 +94,7 @@ class ConsumableHandler(CLIHandler):
         cls._prepare_args(args, new)
         consumable = Consumable.new(**vars(new))
         # Create String
-        return cls._tabulate([consumable], getattr(args, "date_format"))
+        return ConsumableList([consumable], getattr(args, "date_format")).tabulate()
 
     @classmethod
     def cli_list(cls, args: Namespace) -> str:
@@ -108,8 +107,15 @@ class ConsumableHandler(CLIHandler):
         consumables = sort_by(consumables, getattr(
             args, "order"), getattr(args, "reverse"))
         results = len(consumables)
+        # Static vs. Dynamic
+        static = getattr(args, "static", False)
         if results > 0:
-            return cls._tabulate(consumables, getattr(args, "date_format")) + f"\n{results} Result(s)..."
+            consumable_list = ConsumableList(consumables, getattr(args, "date_format"))
+            if static:
+                return consumable_list.tabulate() + f"\n{results} Result(s)..."
+            else:
+                consumable_list.run()
+                return ""
         else:
             return "0 Results..."
 
@@ -139,7 +145,7 @@ class ConsumableHandler(CLIHandler):
                 consumables[0].update_self(vars(set_mapping)))
         # Create String
         if len(updated_consumables) > 0:
-            return cls._tabulate(updated_consumables, getattr(args, "date_format"))
+            return ConsumableList(updated_consumables, getattr(args, "date_format")).tabulate()
         else:
             return "No Consumable(s) updated."
 
@@ -345,14 +351,6 @@ class ConsumableHandler(CLIHandler):
             None, "An action action must be selected e.g. cons consuamble new")
 
     @classmethod
-    def _tabulate(cls, instances: Sequence[Consumable], date_format: str = r"%Y/%m/%d") -> str:
-        instances = [[row+1, i.id, i.type, i.name, i.parts, i.rating, i.completions, i.status.name,
-                      datetime.fromtimestamp(i.start_date).strftime(
-                          date_format) if i.start_date else i.start_date,
-                      datetime.fromtimestamp(i.end_date).strftime(date_format) if i.end_date else i.end_date] for row, i in enumerate(instances)]
-        return tabulate(instances, headers=["#", "ID", "Type", "Name", "Parts", "Rating", "Completions", "Status", "Started", "Completed"])
-
-    @classmethod
     def _prepare_args(cls, args: Namespace, values: Namespace) -> None:
         # Date
         date_format = getattr(args, "date_format")
@@ -375,37 +373,6 @@ class ConsumableHandler(CLIHandler):
         if "tags" in values:
             tags = (getattr(values, "tags")).split(",")
             setattr(values, "tags", tags)
-
-    # @classmethod
-    # def cli_update(cls, ent: Type[Consumable], subdict: dict, **kwargs) -> str:
-        # instance = cls.get_ent(ent, subdict)
-        # # Handle increment
-        # if kwargs["increment"]:
-            # instance.status = Status.IN_PROGRESS
-            # inc_major_parts = subdict.pop("major_parts") if "major_parts" in subdict else 0
-            # inc_minor_parts = subdict.pop("minor_parts") if "minor_parts" in subdict else 0
-            # # Only increment parts on first completion
-            # if instance.completions == 0:
-            # subdict["major_parts"] = instance.major_parts + inc_major_parts
-            # subdict["minor_parts"] = instance.minor_parts + inc_minor_parts
-        # # Handle finish
-        # if kwargs["finish"]:
-            # instance.status = Status.COMPLETED
-            # if instance.completions == 0:
-            # instance.end_date = datetime.utcnow().timestamp()
-            # instance.completions = instance.completions + 1
-        # # Convert dates to float and other type conversions
-        # try:
-            # cls._handle_type_conversion(subdict, kwargs["date_format"])
-        # except ValueError as e:
-            # raise ArgumentError(None, str(e))
-        # # Update other values
-        # for key, value in subdict.items():
-            # setattr(instance, key, value)
-        # instance.save()
-        # cls.add_staff(instance, kwargs["staff"])
-        # return cls._cli_tabulate([instance], kwargs["date_format"])
-
 
 class SeriesHandler(CLIHandler):
 
@@ -437,7 +404,7 @@ class SeriesHandler(CLIHandler):
         # Create
         series = Series.new(**vars(new))
         # Create String
-        return cls._tabulate([series])
+        return SeriesList([series]).tabulate()
 
     @classmethod
     def cli_list(cls, args: Namespace) -> str:
@@ -448,8 +415,15 @@ class SeriesHandler(CLIHandler):
         series = sort_by(series, getattr(
             args, "order"), getattr(args, "reverse"))
         results = len(series)
+        # Static vs Dynamic
+        static = getattr(args, "static", False)
         if results > 0:
-            return cls._tabulate(series) + f"\n{results} Result(s)..."
+            series_list = SeriesList(series)
+            if static:
+                return series_list.tabulate() + f"\n{results} Result(s)..."
+            else:
+                series_list.run()
+                return ""
         else:
             return "0 Results..."
 
@@ -476,7 +450,7 @@ class SeriesHandler(CLIHandler):
             updated_series.append(
                 series[0].update_self(vars(set_mapping)))
         if len(updated_series) > 0:
-            return cls._tabulate(updated_series)
+            return SeriesList(updated_series).tabulate()
         else:
             return "No Series updated."
 
@@ -514,11 +488,6 @@ class SeriesHandler(CLIHandler):
         raise ArgumentError(
             None, "An action action must be selected e.g. cons series new")
 
-    @classmethod
-    def _tabulate(cls, instances: Sequence[Series]) -> str:
-        instances = [[row+1, i.id, i.name] for row, i in enumerate(instances)]
-        return tabulate(instances, headers=["#", "ID", "Name"])
-
 
 class PersonnelHandler(CLIHandler):
 
@@ -547,7 +516,7 @@ class PersonnelHandler(CLIHandler):
         # Create
         personnel = Personnel.new(**vars(new))
         # Create String
-        return cls._tabulate([personnel])
+        return PersonnelList([personnel]).tabulate()
 
     @classmethod
     def cli_list(cls, args: Namespace) -> str:
@@ -558,8 +527,14 @@ class PersonnelHandler(CLIHandler):
         personnel = sort_by(personnel, getattr(
             args, "order"), getattr(args, "reverse"))
         results = len(personnel)
+        static = getattr(args, "static", False)
         if results > 0:
-            return cls._tabulate(personnel) + f"\n{results} Result(s)..."
+            personnel_list = PersonnelList(personnel)
+            if static:
+                return personnel_list.tabulate() + f"\n{results} Result(s)..."
+            else:
+                personnel_list.run() 
+                return ""
         else:
             return "0 Results..."
 
@@ -573,20 +548,20 @@ class PersonnelHandler(CLIHandler):
         # Find
         personnel = Personnel.find(**vars(where_mapping))
         # Update
-        updated_series = []
+        updated_personnel = []
         if len(personnel) == 0:
             return "No Personnel matching where conditions."
         elif len(personnel) > 1:
             for pers in personnel:
                 if confirm_action(f"update of {str(pers)}"):
-                    updated_series.append(
+                    updated_personnel.append(
                         pers.update_self(vars(set_mapping)))
         # Create String
         else:
-            updated_series.append(
+            updated_personnel.append(
                 personnel[0].update_self(vars(set_mapping)))
-        if len(updated_series) > 0:
-            return cls._tabulate(updated_series)
+        if len(updated_personnel) > 0:
+            return PersonnelList(updated_personnel).tabulate()
         else:
             return "No Personnel updated."
 
@@ -614,9 +589,3 @@ class PersonnelHandler(CLIHandler):
     def no_action(cls, args: Namespace) -> str:
         raise ArgumentError(
             None, "An action action must be selected e.g. cons personnel new")
-
-    @classmethod
-    def _tabulate(cls, instances: Sequence[Personnel]) -> str:
-        instances = [[row+1, i.id, i.first_name, i.pseudonym, i.last_name]
-                     for row, i in enumerate(instances)]
-        return tabulate(instances, headers=["#", "ID", "First Name", "Pseudonym", "Last Name"])

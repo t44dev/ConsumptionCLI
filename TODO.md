@@ -5,7 +5,7 @@
 - [x] *Series* implementation
 - [x] *Set/Find* seperation and *Find* on any field
 - [x] *Personnel* full implementation
-- [ ] *List* Cursor interaction
+- [x] Interactive *List* 
 - [x] Input on missing mandatory values
 - [ ] Setup/Update script
 - [ ] CI/CD

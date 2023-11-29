@@ -1,14 +1,10 @@
 # General Imports
 import argparse
-from typing import Callable
 
 # Consumption Imports
-from consumptionbackend.Database import DatabaseEntity
-from consumptionbackend.Consumable import Consumable, Status
-from consumptionbackend.Personnel import Personnel
-from consumptionbackend.Series import Series
+from consumptionbackend.Consumable import Status
 from .SubNamespaceAction import SubNamespaceAction
-from .CLIHandling import CLIHandler, PersonnelHandler, ConsumableHandler, SeriesHandler
+from .cli_handling import CLIHandler, PersonnelHandler, ConsumableHandler, SeriesHandler
 
 
 def get_main_parser() -> argparse.ArgumentParser:
@@ -48,6 +44,8 @@ def add_consumable_parsers(sub_parsers: argparse._SubParsersAction) -> None:
                                   choices=ConsumableHandler.ORDER_LIST, default="name", help="order by attribute")
     cons_parser_list.add_argument(
         "--rv", "--reverse", dest="reverse", action="store_true", help="reverse order of listing")
+    cons_parser_list.add_argument("--static", dest="static", action="store_true",
+                                  help="use a static listing instead of interactive scrolling")
     where_args_consumable(cons_parser_list)
     # Update Consumable
     cons_parser_update = sub_cons_parsers.add_parser(
@@ -93,12 +91,14 @@ def add_consumable_parsers(sub_parsers: argparse._SubParsersAction) -> None:
     add_parser = sub_cons_parsers_personnel.add_parser(
         "add", aliases=["a"], help="add personnel")
     add_parser.set_defaults(mode="add_personnel")
-    add_parser.add_argument("-r", "--role", dest="role", default=argparse.SUPPRESS, help="role to associate with added personnel")
+    add_parser.add_argument("-r", "--role", dest="role", default=argparse.SUPPRESS,
+                            help="role to associate with added personnel")
     where_args_personnel(add_parser, "personnel")
     remove_parser = sub_cons_parsers_personnel.add_parser(
         "remove", aliases=["r"], help="remove personnel")
     remove_parser.set_defaults(mode="remove_personnel")
-    remove_parser.add_argument("-r", "--role", dest="role", default=argparse.SUPPRESS, help="personnel role for removal")
+    remove_parser.add_argument("-r", "--role", dest="role",
+                               default=argparse.SUPPRESS, help="personnel role for removal")
     where_args_personnel(remove_parser, "personnel")
 
 
@@ -156,6 +156,8 @@ def add_series_parsers(sub_parsers: argparse._SubParsersAction) -> None:
                                     choices=SeriesHandler.ORDER_LIST, default="name", help="order by attribute")
     series_parser_list.add_argument(
         "--rv", "--reverse", dest="reverse", action="store_true", help="reverse order of listing")
+    series_parser_list.add_argument("--static", dest="static", action="store_true",
+                                  help="use a static listing instead of interactive scrolling")
     where_args_series(series_parser_list)
     # Update Series
     series_parser_update = sub_series_parsers.add_parser(
@@ -208,6 +210,8 @@ def add_personnel_parsers(sub_parsers: argparse._SubParsersAction) -> None:
                                        choices=PersonnelHandler.ORDER_LIST, default="first_name", help="order by attribute")
     personnel_parser_list.add_argument(
         "--rv", "--reverse", dest="reverse", action="store_true", help="reverse order of listing")
+    personnel_parser_list.add_argument("--static", dest="static", action="store_true",
+                                  help="use a static listing instead of interactive scrolling")
     where_args_personnel(personnel_parser_list, "where")
     # Update Series
     personnel_parser_update = sub_personnel_parsers.add_parser(
