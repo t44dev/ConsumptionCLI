@@ -51,7 +51,7 @@ def add_consumable_parsers(sub_parsers: argparse._SubParsersAction) -> None:
     cons_parser_update = sub_cons_parsers.add_parser(
         "update", aliases=["u"], help="update existing consumable")
     cons_parser_update.set_defaults(mode="update")
-    where_args_personnel(cons_parser_update)
+    where_args_consumable(cons_parser_update)
     set_parser = cons_parser_update.add_subparsers().add_parser("set",
                                                                 aliases=["s"])
     set_args_consumable(set_parser)
@@ -125,6 +125,8 @@ def _consumable_args(parser: argparse.ArgumentParser, dest: str) -> None:
                         e.name for e in Status], action=SubNamespaceAction, default=argparse.SUPPRESS, metavar="STATUS", help="progress status")
     parser.add_argument("-p", "--parts", type=int, dest=f"{dest}.parts", action=SubNamespaceAction,
                         default=argparse.SUPPRESS, metavar="PART", help="e.g. Chapter, Episode")
+    parser.add_argument("--mp" "--maxparts", type=int, dest=f"{dest}.max_parts", action=SubNamespaceAction,
+                        default=argparse.SUPPRESS, metavar="MAX_PARTS", help="total number of parts on completion")
     parser.add_argument("-c", "--completions", type=int, dest=f"{dest}.completions",
                         action=SubNamespaceAction, default=argparse.SUPPRESS, metavar="COMPLETIONS", help="times completed")
     parser.add_argument("-r", "--rating", type=float, dest=f"{dest}.rating", action=SubNamespaceAction,
@@ -157,7 +159,7 @@ def add_series_parsers(sub_parsers: argparse._SubParsersAction) -> None:
     series_parser_list.add_argument(
         "--rv", "--reverse", dest="reverse", action="store_true", help="reverse order of listing")
     series_parser_list.add_argument("--static", dest="static", action="store_true",
-                                  help="use a static listing instead of interactive scrolling")
+                                    help="use a static listing instead of interactive scrolling")
     where_args_series(series_parser_list)
     # Update Series
     series_parser_update = sub_series_parsers.add_parser(
@@ -211,7 +213,7 @@ def add_personnel_parsers(sub_parsers: argparse._SubParsersAction) -> None:
     personnel_parser_list.add_argument(
         "--rv", "--reverse", dest="reverse", action="store_true", help="reverse order of listing")
     personnel_parser_list.add_argument("--static", dest="static", action="store_true",
-                                  help="use a static listing instead of interactive scrolling")
+                                       help="use a static listing instead of interactive scrolling")
     where_args_personnel(personnel_parser_list, "where")
     # Update Series
     personnel_parser_update = sub_personnel_parsers.add_parser(

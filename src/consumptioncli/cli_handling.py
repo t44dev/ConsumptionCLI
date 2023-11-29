@@ -110,7 +110,8 @@ class ConsumableHandler(CLIHandler):
         # Static vs. Dynamic
         static = getattr(args, "static", False)
         if results > 0:
-            consumable_list = ConsumableList(consumables, getattr(args, "date_format"))
+            consumable_list = ConsumableList(
+                consumables, getattr(args, "date_format"))
             if static:
                 return consumable_list.tabulate() + f"\n{results} Result(s)..."
             else:
@@ -374,6 +375,7 @@ class ConsumableHandler(CLIHandler):
             tags = (getattr(values, "tags")).split(",")
             setattr(values, "tags", tags)
 
+
 class SeriesHandler(CLIHandler):
 
     ORDER_LIST = ["name"]
@@ -533,7 +535,7 @@ class PersonnelHandler(CLIHandler):
             if static:
                 return personnel_list.tabulate() + f"\n{results} Result(s)..."
             else:
-                personnel_list.run() 
+                personnel_list.run()
                 return ""
         else:
             return "0 Results..."
