@@ -11,7 +11,7 @@
 - [ ] CI/CD
 
 ## Minor
-- [ ] Total parts
+- [x] Total parts
 - [ ] Force flag on update and delete
 - [ ] Delete returns deleted records
 - [ ] Streamline filtering of tables

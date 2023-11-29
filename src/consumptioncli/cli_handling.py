@@ -359,14 +359,20 @@ class ConsumableHandler(CLIHandler):
             if getattr(values, "start_date").lower() == "none":
                 setattr(values, "start_date", None)
             else:
-                setattr(values, "start_date", datetime.strptime(
-                    getattr(values, "start_date"), date_format).timestamp())
+                try:
+                    setattr(values, "start_date", datetime.strptime(
+                        getattr(values, "start_date"), date_format).timestamp())
+                except ValueError as e:
+                    raise ArgumentError(None, "Invalid date for format.")
         if "end_date" in values:
             if getattr(values, "end_date").lower() == "none":
                 setattr(values, "end_date", None)
             else:
-                setattr(values, "end_date", datetime.strptime(
-                    getattr(values, "end_date"), date_format).timestamp())
+                try:
+                    setattr(values, "end_date", datetime.strptime(
+                        getattr(values, "end_date"), date_format).timestamp())
+                except ValueError as e:
+                    raise ArgumentError(None, "Invalid date for format.")
         # Status
         if "status" in values:
             setattr(values, "status", Status[getattr(values, "status")])

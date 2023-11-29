@@ -125,7 +125,7 @@ def _consumable_args(parser: argparse.ArgumentParser, dest: str) -> None:
                         e.name for e in Status], action=SubNamespaceAction, default=argparse.SUPPRESS, metavar="STATUS", help="progress status")
     parser.add_argument("-p", "--parts", type=int, dest=f"{dest}.parts", action=SubNamespaceAction,
                         default=argparse.SUPPRESS, metavar="PART", help="e.g. Chapter, Episode")
-    parser.add_argument("--mp" "--maxparts", type=int, dest=f"{dest}.max_parts", action=SubNamespaceAction,
+    parser.add_argument("--mp", "--maxparts", type=int, dest=f"{dest}.max_parts", action=SubNamespaceAction,
                         default=argparse.SUPPRESS, metavar="MAX_PARTS", help="total number of parts on completion")
     parser.add_argument("-c", "--completions", type=int, dest=f"{dest}.completions",
                         action=SubNamespaceAction, default=argparse.SUPPRESS, metavar="COMPLETIONS", help="times completed")
