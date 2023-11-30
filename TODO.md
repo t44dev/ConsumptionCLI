@@ -8,7 +8,7 @@
 - [x] Interactive *List* 
 - [x] Input on missing mandatory values
 - [x] Total parts
-- [ ] Setup/Update script
+- [x] Setup/Update script
 - [ ] CI/CD
 
 ## Next
