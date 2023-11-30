@@ -14,14 +14,14 @@ from .utils import sort_by, request_input, confirm_action
 
 
 class CLIHandler(ABC):
-
     def __init__(self) -> None:
         raise RuntimeError("Class cannot be used outside of a static context.")
 
     @classmethod
     def handle(cls, args: Namespace) -> str:
         raise ArgumentError(
-            None, "An entity type must be seleced. e.g. cons consumable")
+            None, "An entity type must be seleced. e.g. cons consumable"
+        )
 
     @classmethod
     @abstractmethod
@@ -50,9 +50,17 @@ class CLIHandler(ABC):
 
 
 class ConsumableHandler(CLIHandler):
-
-    ORDER_LIST = ["id", "type", "name", "parts", "rating",
-                  "completions", "status", "start_date", "end_date"]
+    ORDER_LIST = [
+        "id",
+        "type",
+        "name",
+        "parts",
+        "rating",
+        "completions",
+        "status",
+        "start_date",
+        "end_date",
+    ]
 
     @classmethod
     def handle(cls, args: Namespace) -> str:
@@ -73,7 +81,9 @@ class ConsumableHandler(CLIHandler):
                 return cls.cli_series(args)
             case "personnel":
                 raise ArgumentError(
-                    None, "Must select an action. e.g. cons consumable personnel add --name John")
+                    None,
+                    "Must select an action. e.g. cons consumable personnel add --name John",
+                )
             case "add_personnel":
                 return cls.cli_add_personnel(args)
             case "remove_personnel":
@@ -104,14 +114,14 @@ class ConsumableHandler(CLIHandler):
         # Create String
         consumables = Consumable.find(**vars(where))
         # Ordering
-        consumables = sort_by(consumables, getattr(
-            args, "order"), getattr(args, "reverse"))
+        consumables = sort_by(
+            consumables, getattr(args, "order"), getattr(args, "reverse")
+        )
         results = len(consumables)
         # Static vs. Dynamic
         static = getattr(args, "static", False)
         if results > 0:
-            consumable_list = ConsumableList(
-                consumables, getattr(args, "date_format"))
+            consumable_list = ConsumableList(consumables, getattr(args, "date_format"))
             if static:
                 return consumable_list.tabulate() + f"\n{results} Result(s)..."
             else:
@@ -126,7 +136,9 @@ class ConsumableHandler(CLIHandler):
         set_mapping = getattr(args, "set", Namespace())
         if len(vars(set_mapping)) == 0:
             raise ArgumentError(
-                None, "Values to set must be non-empty. e.g. cons consumable update set --name A")
+                None,
+                "Values to set must be non-empty. e.g. cons consumable update set --name A",
+            )
         # Prepare Arguments
         cls._prepare_args(args, where_mapping)
         cls._prepare_args(args, set_mapping)
@@ -140,13 +152,15 @@ class ConsumableHandler(CLIHandler):
             for consumable in consumables:
                 if confirm_action(f"update of {str(consumable)}"):
                     updated_consumables.append(
-                        consumable.update_self(vars(set_mapping)))
+                        consumable.update_self(vars(set_mapping))
+                    )
         else:
-            updated_consumables.append(
-                consumables[0].update_self(vars(set_mapping)))
+            updated_consumables.append(consumables[0].update_self(vars(set_mapping)))
         # Create String
         if len(updated_consumables) > 0:
-            return ConsumableList(updated_consumables, getattr(args, "date_format")).tabulate()
+            return ConsumableList(
+                updated_consumables, getattr(args, "date_format")
+            ).tabulate()
         else:
             return "No Consumable(s) updated."
 
@@ -238,7 +252,9 @@ class ConsumableHandler(CLIHandler):
         series_where = getattr(args, "series", Namespace())
         if len(vars(series_where)) == 0:
             raise ArgumentError(
-                None, "Series to set must be specified e.g. cons consumable series set --name S")
+                None,
+                "Series to set must be specified e.g. cons consumable series set --name S",
+            )
         # Get Series
         series = Series.find(**vars(series_where))
         set_series = None
@@ -260,7 +276,9 @@ class ConsumableHandler(CLIHandler):
             return "No Consumables matching conditions."
         elif len(consumables) > 1:
             for consumable in consumables:
-                if confirm_action(f"setting Series of {str(consumable)} to {str(set_series)}"):
+                if confirm_action(
+                    f"setting Series of {str(consumable)} to {str(set_series)}"
+                ):
                     consumable.set_series(set_series)
                     consumables_altered += 1
         else:
@@ -297,7 +315,9 @@ class ConsumableHandler(CLIHandler):
         # Add to Consumables
         if len(consumables) > 1:
             for consumable in consumables:
-                if confirm_action(f"adding selected Personnel to {str(consumable)} as '{role}'"):
+                if confirm_action(
+                    f"adding selected Personnel to {str(consumable)} as '{role}'"
+                ):
                     for pers_add in selected_personnel:
                         if consumable.add_personnel(pers_add):
                             consumables_altered += 1
@@ -336,7 +356,9 @@ class ConsumableHandler(CLIHandler):
         # Add to Consumables
         if len(consumables) > 1:
             for consumable in consumables:
-                if confirm_action(f"removal of selected Personnel from {str(consumable)}"):
+                if confirm_action(
+                    f"removal of selected Personnel from {str(consumable)}"
+                ):
                     for pers_remove in selected_personnel:
                         if consumable.remove_personnel(pers_remove):
                             consumables_altered += 1
@@ -349,7 +371,8 @@ class ConsumableHandler(CLIHandler):
     @classmethod
     def no_action(cls, args: Namespace) -> str:
         raise ArgumentError(
-            None, "An action action must be selected e.g. cons consuamble new")
+            None, "An action action must be selected e.g. cons consuamble new"
+        )
 
     @classmethod
     def _prepare_args(cls, args: Namespace, values: Namespace) -> None:
@@ -360,18 +383,28 @@ class ConsumableHandler(CLIHandler):
                 setattr(values, "start_date", None)
             else:
                 try:
-                    setattr(values, "start_date", datetime.strptime(
-                        getattr(values, "start_date"), date_format).timestamp())
-                except ValueError as e:
+                    setattr(
+                        values,
+                        "start_date",
+                        datetime.strptime(
+                            getattr(values, "start_date"), date_format
+                        ).timestamp(),
+                    )
+                except ValueError:
                     raise ArgumentError(None, "Invalid date for format.")
         if "end_date" in values:
             if getattr(values, "end_date").lower() == "none":
                 setattr(values, "end_date", None)
             else:
                 try:
-                    setattr(values, "end_date", datetime.strptime(
-                        getattr(values, "end_date"), date_format).timestamp())
-                except ValueError as e:
+                    setattr(
+                        values,
+                        "end_date",
+                        datetime.strptime(
+                            getattr(values, "end_date"), date_format
+                        ).timestamp(),
+                    )
+                except ValueError:
                     raise ArgumentError(None, "Invalid date for format.")
         # Status
         if "status" in values:
@@ -383,7 +416,6 @@ class ConsumableHandler(CLIHandler):
 
 
 class SeriesHandler(CLIHandler):
-
     ORDER_LIST = ["name"]
 
     @classmethod
@@ -420,8 +452,7 @@ class SeriesHandler(CLIHandler):
         # Create String
         series = Series.find(**vars(where))
         # Ordering
-        series = sort_by(series, getattr(
-            args, "order"), getattr(args, "reverse"))
+        series = sort_by(series, getattr(args, "order"), getattr(args, "reverse"))
         results = len(series)
         # Static vs Dynamic
         static = getattr(args, "static", False)
@@ -441,7 +472,9 @@ class SeriesHandler(CLIHandler):
         set_mapping = getattr(args, "set", Namespace())
         if len(vars(set_mapping)) == 0:
             raise ArgumentError(
-                None, "Values to set must be non-empty. e.g. cons series update set --name A")
+                None,
+                "Values to set must be non-empty. e.g. cons series update set --name A",
+            )
         # Find
         series = Series.find(**vars(where_mapping))
         # Update
@@ -451,12 +484,10 @@ class SeriesHandler(CLIHandler):
         elif len(series) > 1:
             for ser in series:
                 if confirm_action(f"update of {str(ser)}"):
-                    updated_series.append(
-                        ser.update_self(vars(set_mapping)))
+                    updated_series.append(ser.update_self(vars(set_mapping)))
         # Create String
         else:
-            updated_series.append(
-                series[0].update_self(vars(set_mapping)))
+            updated_series.append(series[0].update_self(vars(set_mapping)))
         if len(updated_series) > 0:
             return SeriesList(updated_series).tabulate()
         else:
@@ -477,16 +508,15 @@ class SeriesHandler(CLIHandler):
                     try:
                         ser.delete_self()
                         deleted += 1
-                    except IntegrityError as e:
+                    except IntegrityError:
                         print(f"{deleted} Series deleted.")
-                        raise ArgumentError(
-                            None, "Cannot delete Series with -1 ID")
+                        raise ArgumentError(None, "Cannot delete Series with -1 ID")
         # Create String
         else:
             try:
                 series[0].delete_self()
                 deleted += 1
-            except IntegrityError as e:
+            except IntegrityError:
                 print(f"{deleted} Series deleted.")
                 raise ArgumentError(None, "Cannot delete Series with -1 ID")
         return f"{deleted} Series deleted."
@@ -494,11 +524,11 @@ class SeriesHandler(CLIHandler):
     @classmethod
     def no_action(cls, args: Namespace) -> str:
         raise ArgumentError(
-            None, "An action action must be selected e.g. cons series new")
+            None, "An action action must be selected e.g. cons series new"
+        )
 
 
 class PersonnelHandler(CLIHandler):
-
     ORDER_LIST = ["first_name", "last_name", "pseudonym"]
 
     @classmethod
@@ -520,7 +550,9 @@ class PersonnelHandler(CLIHandler):
         new = getattr(args, "new", Namespace())
         if len(vars(new)) == 0:
             raise ArgumentError(
-                None, "One of the valid values must be set. i.e. first_name, last_name or pseudonym.")
+                None,
+                "One of the valid values must be set. i.e. first_name, last_name or pseudonym.",
+            )
         # Create
         personnel = Personnel.new(**vars(new))
         # Create String
@@ -532,8 +564,7 @@ class PersonnelHandler(CLIHandler):
         # Create String
         personnel = Personnel.find(**vars(where))
         # Ordering
-        personnel = sort_by(personnel, getattr(
-            args, "order"), getattr(args, "reverse"))
+        personnel = sort_by(personnel, getattr(args, "order"), getattr(args, "reverse"))
         results = len(personnel)
         static = getattr(args, "static", False)
         if results > 0:
@@ -552,7 +583,9 @@ class PersonnelHandler(CLIHandler):
         set_mapping = getattr(args, "set", Namespace())
         if len(vars(set_mapping)) == 0:
             raise ArgumentError(
-                None, "Values to set must be non-empty. e.g. cons personnel update set --firstname A")
+                None,
+                "Values to set must be non-empty. e.g. cons personnel update set --firstname A",
+            )
         # Find
         personnel = Personnel.find(**vars(where_mapping))
         # Update
@@ -562,12 +595,10 @@ class PersonnelHandler(CLIHandler):
         elif len(personnel) > 1:
             for pers in personnel:
                 if confirm_action(f"update of {str(pers)}"):
-                    updated_personnel.append(
-                        pers.update_self(vars(set_mapping)))
+                    updated_personnel.append(pers.update_self(vars(set_mapping)))
         # Create String
         else:
-            updated_personnel.append(
-                personnel[0].update_self(vars(set_mapping)))
+            updated_personnel.append(personnel[0].update_self(vars(set_mapping)))
         if len(updated_personnel) > 0:
             return PersonnelList(updated_personnel).tabulate()
         else:
@@ -596,4 +627,5 @@ class PersonnelHandler(CLIHandler):
     @classmethod
     def no_action(cls, args: Namespace) -> str:
         raise ArgumentError(
-            None, "An action action must be selected e.g. cons personnel new")
+            None, "An action action must be selected e.g. cons personnel new"
+        )

@@ -11,7 +11,7 @@ def main():
     except ArgumentError as e:
         main_parser.error(e.message)
     # except Exception as e:
-        # main_parser.error(f"Unexpected Error: {e}")
+    # main_parser.error(f"Unexpected Error: {e}")
 
 
 if __name__ == "__main__":

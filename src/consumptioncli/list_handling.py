@@ -16,7 +16,6 @@ from . import list_actions
 
 
 class ListState:
-
     def __init__(self, instances: Sequence[DatabaseEntity]) -> None:
         self.instances = instances
         self.selected = set()
@@ -31,7 +30,6 @@ Actions: TypeAlias = Mapping[str, Action]
 
 
 class BaseInstanceList(ABC):
-
     def __init__(self, instances: Sequence[DatabaseEntity]) -> None:
         self.state = ListState(instances)
 
@@ -76,30 +74,37 @@ class BaseInstanceList(ABC):
         # Body
         lines_before_after = curses.LINES - 5
         start_index = max(0, self.state.current - (lines_before_after // 2))
-        difference = start_index - \
-            (self.state.current - (lines_before_after // 2))
-        end_index = min(len(self.state.instances) - 1,
-                        self.state.current + (lines_before_after // 2) + difference)
-        displayed = body[start_index:end_index+1]
+        difference = start_index - (self.state.current - (lines_before_after // 2))
+        end_index = min(
+            len(self.state.instances) - 1,
+            self.state.current + (lines_before_after // 2) + difference,
+        )
+        displayed = body[start_index : end_index + 1]
         for i, line in enumerate(displayed):
             true_i = i + start_index
             y_pos = i + 2
-            attr = curses.A_STANDOUT if self.state.instances[
-                true_i] in self.state.selected else curses.A_NORMAL
+            attr = (
+                curses.A_STANDOUT
+                if self.state.instances[true_i] in self.state.selected
+                else curses.A_NORMAL
+            )
             if true_i == self.state.current:
                 window.addstr(y_pos, 0, f"> {line} <", attr)
             else:
                 window.addstr(y_pos, 2, line, attr)
         # Render Actions
         processed_actions = dict()
-        for key, (name, _, alias, priority) in sorted(actions.items(), key=lambda x: x[1][3], reverse=True):
+        for key, (name, _, alias, priority) in sorted(
+            actions.items(), key=lambda x: x[1][3], reverse=True
+        ):
             if name in processed_actions:
                 if alias not in processed_actions.get(name)[0]:
                     processed_actions.get(name)[0].append(alias)
             else:
                 processed_actions[name] = [[alias], priority]
         processed_actions = sorted(
-            processed_actions.items(), key=lambda x: x[1][1], reverse=True)
+            processed_actions.items(), key=lambda x: x[1][1], reverse=True
+        )
         action_strings = []
         for name, (aliases, _) in processed_actions:
             action_strings.append(f"[{'/'.join(aliases)}] {name}")
@@ -113,15 +118,15 @@ class BaseInstanceList(ABC):
         actions["J"] = ("Down", list_actions.move_down, "J", 9997)
         actions["KEY_DOWN"] = ("Down", list_actions.move_down, "↓", 9996)
         actions["\n"] = ("Select", list_actions.select_current, "Enter", 9995)
-        actions["KEY_ENTER"] = (
-            "Select", list_actions.select_current, "Enter", 9994)
+        actions["KEY_ENTER"] = ("Select", list_actions.select_current, "Enter", 9994)
         actions["Q"] = ("Quit", list_actions.quit, "Q", -9999)
         return actions
 
 
 class ConsumableList(BaseInstanceList):
-
-    def __init__(self, instances: Sequence[Consumable], date_format: str = r"%Y/%m/%d") -> None:
+    def __init__(
+        self, instances: Sequence[Consumable], date_format: str = r"%Y/%m/%d"
+    ) -> None:
         super().__init__(instances)
         self.date_format = date_format
 
@@ -130,15 +135,43 @@ class ConsumableList(BaseInstanceList):
 
     def tabulate(self) -> str:
         instances: Sequence[Consumable] = self.state.instances
-        table_instances = [[row+1, i.id, i.type, truncate(i.name), f"{i.parts}/{'?' if i.max_parts is None else i.max_parts}", i.rating, i.completions, i.status.name,
-                            datetime.fromtimestamp(i.start_date).strftime(
-                                self.date_format) if i.start_date else i.start_date,
-                            datetime.fromtimestamp(i.end_date).strftime(self.date_format) if i.end_date else i.end_date] for row, i in enumerate(instances)]
-        return tabulate(table_instances, headers=["#", "ID", "Type", "Name", "Parts", "Rating", "Completions", "Status", "Started", "Completed"])
+        table_instances = [
+            [
+                row + 1,
+                i.id,
+                i.type,
+                truncate(i.name),
+                f"{i.parts}/{'?' if i.max_parts is None else i.max_parts}",
+                i.rating,
+                i.completions,
+                i.status.name,
+                datetime.fromtimestamp(i.start_date).strftime(self.date_format)
+                if i.start_date
+                else i.start_date,
+                datetime.fromtimestamp(i.end_date).strftime(self.date_format)
+                if i.end_date
+                else i.end_date,
+            ]
+            for row, i in enumerate(instances)
+        ]
+        return tabulate(
+            table_instances,
+            headers=[
+                "#",
+                "ID",
+                "Type",
+                "Name",
+                "Parts",
+                "Rating",
+                "Completions",
+                "Status",
+                "Started",
+                "Completed",
+            ],
+        )
 
 
 class SeriesList(BaseInstanceList):
-
     def __init__(self, instances: Sequence[Series]) -> None:
         super().__init__(instances)
 
@@ -147,13 +180,11 @@ class SeriesList(BaseInstanceList):
 
     def tabulate(self) -> str:
         instances: Sequence[Series] = self.state.instances
-        table_instances = [[row+1, i.id, i.name]
-                           for row, i in enumerate(instances)]
+        table_instances = [[row + 1, i.id, i.name] for row, i in enumerate(instances)]
         return tabulate(table_instances, headers=["#", "ID", "Name"])
 
 
 class PersonnelList(BaseInstanceList):
-
     def __init__(self, instances: Sequence[Personnel]) -> None:
         super().__init__(instances)
 
@@ -162,6 +193,10 @@ class PersonnelList(BaseInstanceList):
 
     def tabulate(self) -> str:
         instances: Sequence[Personnel] = self.state.instances
-        table_instances = [[row+1, i.id, i.first_name, i.pseudonym, i.last_name]
-                           for row, i in enumerate(instances)]
-        return tabulate(table_instances, headers=["#", "ID", "First Name", "Pseudonym", "Last Name"])
+        table_instances = [
+            [row + 1, i.id, i.first_name, i.pseudonym, i.last_name]
+            for row, i in enumerate(instances)
+        ]
+        return tabulate(
+            table_instances, headers=["#", "ID", "First Name", "Pseudonym", "Last Name"]
+        )
