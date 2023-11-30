@@ -184,7 +184,7 @@ class ConsumableHandler(CLIHandler):
             consumables[0].delete_self()
             deleted += 1
         # Create String
-        return f"{deleted} Consumables deleted."
+        return f"{deleted} Consumable(s) deleted."
 
     @classmethod
     def cli_start(cls, args: Namespace) -> str:

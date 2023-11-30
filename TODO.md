@@ -9,7 +9,7 @@
 - [x] Input on missing mandatory values
 - [x] Total parts
 - [x] Setup/Update script
-- [ ] CI/CD
+- [x] CI/CD
 
 ## Next
 - [ ] Classes in parsers.py for better SOC
