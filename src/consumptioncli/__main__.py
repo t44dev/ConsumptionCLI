@@ -1,16 +1,18 @@
 from argparse import ArgumentError
-from .parsers import main_parser
-from consumptionbackend.Database import SQLiteTableInstantiator
+from .parsers import get_main_parser
+
 
 def main():
-    args = vars(main_parser.parse_args())
-    subdict = args.pop("subdict") if "subdict" in args else dict() # Default value is empty dict, see SubdictAction.py
+    main_parser = get_main_parser()
+    args = main_parser.parse_args()
     try:
-        SQLiteTableInstantiator.run()
-        print(args["_handler"].handle(args["_ent"], subdict, **args))
+        print(getattr(args, "handler").handle(args))
         return 0
     except ArgumentError as e:
         main_parser.error(e.message)
+    # except Exception as e:
+    # main_parser.error(f"Unexpected Error: {e}")
+
 
 if __name__ == "__main__":
     main()
