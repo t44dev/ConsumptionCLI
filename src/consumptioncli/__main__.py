@@ -1,9 +1,9 @@
 from argparse import ArgumentError
-from .parsers import get_main_parser
+from .parsers import MainParser 
 
 
 def main():
-    main_parser = get_main_parser()
+    main_parser = MainParser.get()
     args = main_parser.parse_args()
     try:
         print(getattr(args, "handler").handle(args))
