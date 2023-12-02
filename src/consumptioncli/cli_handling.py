@@ -413,6 +413,21 @@ class ConsumableHandler(CLIHandler):
         if "tags" in values:
             tags = (getattr(values, "tags")).split(",")
             setattr(values, "tags", tags)
+        # Max Parts
+        max_parts_none = ["None", "Null", "?"]
+        if "max_parts" in values:
+            max_parts = getattr(values, "max_parts").strip().lower()
+            if max_parts in max_parts_none:
+                max_parts = None
+            else:
+                try:
+                    max_parts = int(max_parts)
+                except ValueError:
+                    raise ArgumentError(
+                        None,
+                        "Invalid value for max_parts. Must be an integer or one of ",
+                    )
+            setattr(values, "max_parts", max_parts)
 
 
 class SeriesHandler(CLIHandler):

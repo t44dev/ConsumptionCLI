@@ -224,7 +224,6 @@ def _consumable_args(parser: argparse.ArgumentParser, dest: str) -> None:
     parser.add_argument(
         "--mp",
         "--maxparts",
-        type=int,
         dest=f"{dest}.max_parts",
         action=SubNamespaceAction,
         default=argparse.SUPPRESS,
