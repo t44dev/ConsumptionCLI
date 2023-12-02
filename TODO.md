@@ -7,9 +7,10 @@
 - [ ] Add badges/shields to README
 - [x] Allow setting of NoneType for max_parts
 - [ ] Adaptive name truncation
+- [ ] Tag Search should be an AND not an OR over the searched tags
 
 - [ ] ListAction class
-- [ ] Classes in parsers.py for better SOC
+- [x] Classes in parsers.py for better SOC
 
 ## Next
 - [ ] Delete returns deleted records
