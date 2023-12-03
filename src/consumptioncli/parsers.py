@@ -441,6 +441,10 @@ class PersonnelParser(ChildParser):
         )
         parser.set_defaults(handler=PersonnelHandler)
         sp = parser.add_subparsers()
+        cls._setup_new(sp)
+        cls._setup_list(sp)
+        cls._setup_update(sp)
+        cls._setup_delete(sp)
 
     @classmethod
     def _setup_new(cls, parent_sp) -> None:
