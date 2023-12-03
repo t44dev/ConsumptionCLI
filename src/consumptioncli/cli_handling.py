@@ -208,11 +208,11 @@ class ConsumableHandler(CLIHandler):
         consumables = Consumable.find(**vars(where))
         # Tag
         return cls.do_tag(consumables, getattr(args, "tag", None))
-    
+
     @classmethod
-    def do_tag(cls, consumables : Sequence[Consumable], tag : str = None) -> str:
+    def do_tag(cls, consumables: Sequence[Consumable], tag: str = None) -> str:
         # Get tag
-        if tag is None: 
+        if tag is None:
             tag = request_input("tag")
         # Tag
         tagged = 0

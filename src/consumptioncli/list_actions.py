@@ -3,8 +3,14 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 
+from consumptioncli import list_handling
+
 # Consumption Imports
 from . import list_handling
+from . import cli_handling
+
+
+# General Actions
 
 
 class ListAction(ABC):
@@ -54,4 +60,17 @@ class ListSelect(ListAction):
             state.selected.remove(state.instances[state.current])
         else:
             state.selected.add(state.instances[state.current])
+        return state
+
+
+# Consumable Actions
+
+
+class ListTagSelected(ListAction):
+    ACTION_NAME: str = "Tag Selected"
+
+    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+        list_handling.BaseInstanceList._uninit_curses(state.window)
+        cli_handling.ConsumableHandler.do_tag(state.selected)
+        state.window = list_handling.BaseInstanceList._init_curses()
         return state

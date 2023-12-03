@@ -20,6 +20,7 @@ class ListState:
         self.selected = set()
         self.current = 0
         self.active = True
+        self.window = None
 
 
 class BaseInstanceList(ABC):
@@ -54,34 +55,32 @@ class BaseInstanceList(ABC):
     def _init_run(self, actions: Sequence[list_actions.ListAction]) -> None:
         # Setup State
         actions = BaseInstanceList._setup_actions(actions)
-        window = BaseInstanceList._init_curses()
+        self.state.window = BaseInstanceList._init_curses()
         # Render/Action Loop
-        self._run(actions, window)
+        self._run(actions)
         # Reset State
-        BaseInstanceList._uninit_curses(window)
+        BaseInstanceList._uninit_curses(self.state.window)
 
-    def _run(self, actions: Sequence[list_actions.ListAction], window) -> None:
+    def _run(self, actions: Sequence[list_actions.ListAction]) -> None:
         while self.state.active:
             # Render
-            self._render(self.tabulate(), actions, window)
+            self._render(self.tabulate(), actions)
             # Action
-            key = window.getkey().upper()
+            key = self.state.window.getkey().upper()
             for action in actions:
                 for action_key in action.keys:
                     if key == action_key:
                         self.state = action.run(self.state)
 
-    def _render(
-        self, table: str, actions: Sequence[list_actions.ListAction], window
-    ) -> None:
-        window.erase()
+    def _render(self, table: str, actions: Sequence[list_actions.ListAction]) -> None:
+        self.state.window.erase()
         table = table.split("\n")
         # Render Table
         headers = table[:2]
         body = table[2:]
         # Header
-        window.addstr(0, 2, headers[0], curses.A_BOLD)
-        window.addstr(1, 2, headers[1], curses.A_BOLD)
+        self.state.window.addstr(0, 2, headers[0], curses.A_BOLD)
+        self.state.window.addstr(1, 2, headers[1], curses.A_BOLD)
         # Body
         lines_before_after = curses.LINES - 5
         start_index = max(0, self.state.current - (lines_before_after // 2))
@@ -100,17 +99,17 @@ class BaseInstanceList(ABC):
                 else curses.A_NORMAL
             )
             if true_i == self.state.current:
-                window.addstr(y_pos, 0, f"> {line} <", attr)
+                self.state.window.addstr(y_pos, 0, f"> {line} <", attr)
             else:
-                window.addstr(y_pos, 2, line, attr)
+                self.state.window.addstr(y_pos, 2, line, attr)
         # Render Actions
         action_strings = []
         for action in actions:
             action_strings.append(
                 f"[{'/'.join(action.key_aliases)}] {action.ACTION_NAME}"
             )
-        window.addstr(curses.LINES - 1, 0, "   ".join(action_strings))
-        window.refresh()
+        self.state.window.addstr(curses.LINES - 1, 0, "   ".join(action_strings))
+        self.state.window.refresh()
 
     @classmethod
     def _setup_actions(
@@ -132,7 +131,9 @@ class ConsumableList(BaseInstanceList):
         self.date_format = date_format
 
     def run(self) -> None:
-        super()._init_run([])
+        actions = []
+        actions.append(list_actions.ListTagSelected(999, ["T"], ["T"]))
+        super()._init_run(actions)
 
     def tabulate(self) -> str:
         instances: Sequence[Consumable] = self.state.instances
