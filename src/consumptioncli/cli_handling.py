@@ -1,7 +1,7 @@
 # General Imports
 from argparse import ArgumentError, Namespace
 from datetime import datetime
-from collections.abc import Sequence
+from collections.abc import Sequence 
 from abc import abstractmethod, ABC
 from sqlite3 import IntegrityError
 
@@ -218,14 +218,11 @@ class ConsumableHandler(CLIHandler):
         tagged = 0
         if len(consumables) == 0:
             return "No Consumables found."
-        elif len(consumables) > 1:
+        else:
             for consumable in consumables:
-                if confirm_action(f"tagging of {str(consumable)} with '{tag}'"):
+                if len(consumables) == 1 or confirm_action(f"tagging of {str(consumable)} with '{tag}'"):
                     if consumable.add_tag(tag):
                         tagged += 1
-        else:
-            consumables[0].add_tag(tag)
-            tagged += 1
         return f"{tagged} Consumable(s) tagged."
 
     @classmethod

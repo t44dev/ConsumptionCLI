@@ -66,7 +66,7 @@ class ListDeselectAll(ListAction):
     ACTION_NAME: str = "Deselect All"
 
     def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        state.selected = []
+        state.selected = set()
         return state
 
 # Consumable Actions
