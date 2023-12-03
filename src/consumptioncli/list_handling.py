@@ -118,7 +118,8 @@ class BaseInstanceList(ABC):
         actions.append(list_actions.ListUp(9999, ["K", "KEY_UP"], ["K", "↑"]))
         actions.append(list_actions.ListDown(9998, ["J", "KEY_DOWN"], ["J", "↓"]))
         actions.append(list_actions.ListSelect(9997, ["\n", "KEY_ENTER"], ["Enter"]))
-        actions.append(list_actions.ListQuit(-9999, ["Q"], ["Q"]))
+        actions.append(list_actions.ListDeselectAll(9996, ["A"]))
+        actions.append(list_actions.ListQuit(-9999, ["Q"]))
         actions = sorted(actions, key=lambda x: x.priority, reverse=True)
         return actions
 
@@ -132,7 +133,7 @@ class ConsumableList(BaseInstanceList):
 
     def run(self) -> None:
         actions = []
-        actions.append(list_actions.ListTagSelected(999, ["T"], ["T"]))
+        actions.append(list_actions.ListTagSelected(999, ["T"]))
         super()._init_run(actions)
 
     def tabulate(self) -> str:

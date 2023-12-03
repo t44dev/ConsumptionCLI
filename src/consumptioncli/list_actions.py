@@ -17,11 +17,11 @@ class ListAction(ABC):
     ACTION_NAME: str = ""
 
     def __init__(
-        self, priority: int, keys: Sequence[str], key_alises: Sequence[str]
+        self, priority: int, keys: Sequence[str], key_alises: Sequence[str] = None
     ) -> None:
         self.priority = priority
         self.keys = [key.upper() for key in keys]
-        self.key_aliases = key_alises
+        self.key_aliases = self.keys if key_alises is None else key_alises
 
     @abstractmethod
     def run(self, state: list_handling.ListState) -> list_handling.ListState:
@@ -62,6 +62,12 @@ class ListSelect(ListAction):
             state.selected.add(state.instances[state.current])
         return state
 
+class ListDeselectAll(ListAction):
+    ACTION_NAME: str = "Deselect All"
+
+    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+        state.selected = []
+        return state
 
 # Consumable Actions
 
