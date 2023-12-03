@@ -1,5 +1,5 @@
 from argparse import ArgumentError
-from .parsers import MainParser 
+from .parsers import MainParser
 
 
 def main():

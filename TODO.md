@@ -9,7 +9,7 @@
 - [ ] Adaptive name truncation
 - [ ] Tag Search should be an AND not an OR over the searched tags
 
-- [ ] ListAction class
+- [x] ListAction class
 - [x] Classes in parsers.py for better SOC
 
 ## Next
