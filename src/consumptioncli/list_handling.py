@@ -34,28 +34,42 @@ class BaseInstanceList(ABC):
     def tabulate(self) -> str:
         pass
 
-    def _run(self, actions: Sequence[list_actions.ListAction]) -> None:
-        # Setup State
-        actions = BaseInstanceList._setup_actions(actions)
+    @classmethod
+    def _init_curses(self):
         window = curses.initscr()
         curses.noecho()
         curses.cbreak()
         curses.curs_set(False)
         window.keypad(True)
-        # Render/Action Loop
-        while self.state.active:
-            self._render(self.tabulate(), actions, window)
-            key = window.getkey().upper()
-            for action in actions:
-                for action_key in action.keys:
-                    if key == action_key:
-                        self.state = action.run(self.state)
-        # Reset State
+        return window
+
+    @classmethod
+    def _uninit_curses(self, window):
         curses.echo()
         curses.nocbreak()
         curses.curs_set(True)
         window.keypad(False)
         curses.endwin()
+
+    def _init_run(self, actions: Sequence[list_actions.ListAction]) -> None:
+        # Setup State
+        actions = BaseInstanceList._setup_actions(actions)
+        window = BaseInstanceList._init_curses()
+        # Render/Action Loop
+        self._run(actions, window)
+        # Reset State
+        BaseInstanceList._uninit_curses(window)
+
+    def _run(self, actions: Sequence[list_actions.ListAction], window) -> None:
+        while self.state.active:
+            # Render
+            self._render(self.tabulate(), actions, window)
+            # Action
+            key = window.getkey().upper()
+            for action in actions:
+                for action_key in action.keys:
+                    if key == action_key:
+                        self.state = action.run(self.state)
 
     def _render(
         self, table: str, actions: Sequence[list_actions.ListAction], window
@@ -118,7 +132,7 @@ class ConsumableList(BaseInstanceList):
         self.date_format = date_format
 
     def run(self) -> None:
-        super()._run([])
+        super()._init_run([])
 
     def tabulate(self) -> str:
         instances: Sequence[Consumable] = self.state.instances
@@ -163,7 +177,7 @@ class SeriesList(BaseInstanceList):
         super().__init__(instances)
 
     def run(self) -> None:
-        super()._run([])
+        super()._init_run([])
 
     def tabulate(self) -> str:
         instances: Sequence[Series] = self.state.instances
@@ -176,7 +190,7 @@ class PersonnelList(BaseInstanceList):
         super().__init__(instances)
 
     def run(self) -> None:
-        super()._run([])
+        super()._init_run([])
 
     def tabulate(self) -> str:
         instances: Sequence[Personnel] = self.state.instances
