@@ -1,6 +1,7 @@
 # General Imports
 from argparse import ArgumentError, Namespace
 from datetime import datetime
+from collections.abc import Sequence
 from abc import abstractmethod, ABC
 from sqlite3 import IntegrityError
 
@@ -147,7 +148,7 @@ class ConsumableHandler(CLIHandler):
         # Update
         updated_consumables = []
         if len(consumables) == 0:
-            return "No Consumables matching where conditions."
+            return "No Consumables found."
         elif len(consumables) > 1:
             for consumable in consumables:
                 if confirm_action(f"update of {str(consumable)}"):
@@ -174,7 +175,7 @@ class ConsumableHandler(CLIHandler):
         # Delete
         deleted = 0
         if len(consumables) == 0:
-            return "No Consumables matching where conditions."
+            return "No Consumables found."
         elif len(consumables) > 1:
             for consumable in consumables:
                 if confirm_action(f"deletion of {str(consumable)}"):
@@ -201,16 +202,22 @@ class ConsumableHandler(CLIHandler):
     @classmethod
     def cli_tag(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
-        if "tag" in args:
-            tag = getattr(args, "tag")
-        else:
-            tag = request_input("tag")
+        # Prepare Arguments
+        cls._prepare_args(args, where)
         # Find
         consumables = Consumable.find(**vars(where))
         # Tag
+        return cls.do_tag(consumables, getattr(args, "tag", None))
+    
+    @classmethod
+    def do_tag(cls, consumables : Sequence[Consumable], tag : str = None) -> str:
+        # Get tag
+        if tag is None: 
+            tag = request_input("tag")
+        # Tag
         tagged = 0
         if len(consumables) == 0:
-            return "No Consumables matching where conditions."
+            return "No Consumables found."
         elif len(consumables) > 1:
             for consumable in consumables:
                 if confirm_action(f"tagging of {str(consumable)} with '{tag}'"):
@@ -219,12 +226,13 @@ class ConsumableHandler(CLIHandler):
         else:
             consumables[0].add_tag(tag)
             tagged += 1
-        # Create string
         return f"{tagged} Consumable(s) tagged."
 
     @classmethod
     def cli_untag(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
+        # Prepare Arguments
+        cls._prepare_args(args, where)
         if "tag" in args:
             tag = getattr(args, "tag")
         else:
@@ -234,7 +242,7 @@ class ConsumableHandler(CLIHandler):
         # Untag
         untagged = 0
         if len(consumables) == 0:
-            return "No Consumables matching where conditions."
+            return "No Consumables found."
         elif len(consumables) > 1:
             for consumable in consumables:
                 if confirm_action(f"removal of tag '{tag}' from {str(consumable)}"):
@@ -250,6 +258,8 @@ class ConsumableHandler(CLIHandler):
     def cli_series(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
         series_where = getattr(args, "series", Namespace())
+        # Prepare Arguments
+        cls._prepare_args(args, where)
         if len(vars(series_where)) == 0:
             raise ArgumentError(
                 None,
@@ -259,7 +269,7 @@ class ConsumableHandler(CLIHandler):
         series = Series.find(**vars(series_where))
         set_series = None
         if len(series) == 0:
-            return "No Series matching conditions."
+            return "No Series found."
         elif len(series) > 1:
             for ser in series:
                 if confirm_action(f"usage of {str(ser)} as Series to set"):
@@ -273,7 +283,7 @@ class ConsumableHandler(CLIHandler):
         consumables = Consumable.find(**vars(where))
         consumables_altered = 0
         if len(consumables) == 0:
-            return "No Consumables matching conditions."
+            return "No Consumables found."
         elif len(consumables) > 1:
             for consumable in consumables:
                 if confirm_action(
@@ -290,6 +300,8 @@ class ConsumableHandler(CLIHandler):
     def cli_add_personnel(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
         personnel_where = getattr(args, "personnel", Namespace())
+        # Prepare Arguments
+        cls._prepare_args(args, where)
         if "role" in args:
             role = getattr(args, "role")
         else:
@@ -300,9 +312,9 @@ class ConsumableHandler(CLIHandler):
         consumables = Consumable.find(**vars(where))
         consumables_altered = 0
         if len(personnel) == 0:
-            return "No Personnel matching conditions."
+            return "No Personnel found."
         if len(consumables) == 0:
-            return "No Consumables matching where conditions."
+            return "No Consumables found."
         # Confirmations
         if len(personnel) > 1:
             for pers in personnel:
@@ -331,6 +343,8 @@ class ConsumableHandler(CLIHandler):
     def cli_remove_personnel(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
         personnel_where = getattr(args, "personnel", Namespace())
+        # Prepare Arguments
+        cls._prepare_args(args, where)
         if "role" in args:
             role = getattr(args, "role")
         else:
@@ -341,9 +355,9 @@ class ConsumableHandler(CLIHandler):
         consumables = Consumable.find(**vars(where))
         consumables_altered = 0
         if len(personnel) == 0:
-            return "No Personnel matching conditions."
+            return "No Personnel found."
         if len(consumables) == 0:
-            return "No Consumables matching where conditions."
+            return "No Consumables found."
         # Confirmations
         if len(personnel) > 1:
             for pers in personnel:
@@ -495,7 +509,7 @@ class SeriesHandler(CLIHandler):
         # Update
         updated_series = []
         if len(series) == 0:
-            return "No Series matching where conditions."
+            return "No Series found."
         elif len(series) > 1:
             for ser in series:
                 if confirm_action(f"update of {str(ser)}"):
@@ -516,7 +530,7 @@ class SeriesHandler(CLIHandler):
         # Delete
         deleted = 0
         if len(series) == 0:
-            return "No Series matching where conditions."
+            return "No Series found."
         elif len(series) > 1:
             for ser in series:
                 if confirm_action(f"deletion of {str(ser)}"):
@@ -606,7 +620,7 @@ class PersonnelHandler(CLIHandler):
         # Update
         updated_personnel = []
         if len(personnel) == 0:
-            return "No Personnel matching where conditions."
+            return "No Personnel found."
         elif len(personnel) > 1:
             for pers in personnel:
                 if confirm_action(f"update of {str(pers)}"):
@@ -627,7 +641,7 @@ class PersonnelHandler(CLIHandler):
         # Delete
         deleted = 0
         if len(personnel) == 0:
-            return "No Personnel matching where conditions."
+            return "No Personnel found."
         elif len(personnel) > 1:
             for pers in personnel:
                 if confirm_action(f"deletion of {str(pers)}"):
