@@ -166,7 +166,11 @@ class ConsumableHandler(CLIHandler):
     ) -> Sequence[Consumable]:
         updated_consumables = []
         for consumable in consumables:
-            if force or confirm_action(f"update of {str(consumable)}"):
+            if (
+                force
+                or len(consumables) == 1
+                or confirm_action(f"update of {str(consumable)}")
+            ):
                 updated_consumables.append(consumable.update_self(set_mapping))
         return updated_consumables
 
@@ -243,7 +247,11 @@ class ConsumableHandler(CLIHandler):
     def do_delete(cls, consumables: Sequence[Consumable], force: bool = False) -> int:
         deleted = 0
         for consumable in consumables:
-            if force or confirm_action(f"deletion of {str(consumable)}"):
+            if (
+                force
+                or len(consumables) == 1
+                or confirm_action(f"deletion of {str(consumable)}")
+            ):
                 consumable.delete_self()
                 deleted += 1
         return deleted
@@ -316,8 +324,10 @@ class ConsumableHandler(CLIHandler):
         # Untag
         untagged = 0
         for consumable in consumables:
-            if force or confirm_action(
-                f"removal of tag '{tag}' from {str(consumable)}"
+            if (
+                force
+                or len(consumables) == 1
+                or confirm_action(f"removal of tag '{tag}' from {str(consumable)}")
             ):
                 if consumable.remove_tag(tag):
                     untagged += 1
