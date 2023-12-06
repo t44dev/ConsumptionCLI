@@ -74,15 +74,24 @@ class BaseInstanceList(ABC):
 
     def _render(self, table: str, actions: Sequence[list_actions.ListAction]) -> None:
         self.state.window.erase()
-        table = table.split("\n")
+        # Render Actions
+        action_string = "   ".join(
+            [
+                f"[{'/'.join(action.key_aliases)}] {action.ACTION_NAME}"
+                for action in actions
+            ]
+        )
+        action_y = curses.LINES - 1 - (len(action_string) // curses.COLS)
+        self.state.window.addstr(action_y, 0, action_string)
         # Render Table
+        table = table.split("\n")
         headers = table[:2]
         body = table[2:]
         # Header
         self.state.window.addstr(0, 2, headers[0], curses.A_BOLD)
         self.state.window.addstr(1, 2, headers[1], curses.A_BOLD)
         # Body
-        lines_before_after = curses.LINES - 5
+        lines_before_after = action_y - 4
         start_index = max(0, self.state.current - (lines_before_after // 2))
         difference = start_index - (self.state.current - (lines_before_after // 2))
         end_index = min(
@@ -102,13 +111,6 @@ class BaseInstanceList(ABC):
                 self.state.window.addstr(y_pos, 0, f"> {line} <", attr)
             else:
                 self.state.window.addstr(y_pos, 2, line, attr)
-        # Render Actions
-        action_strings = []
-        for action in actions:
-            action_strings.append(
-                f"[{'/'.join(action.key_aliases)}] {action.ACTION_NAME}"
-            )
-        self.state.window.addstr(curses.LINES - 1, 0, "   ".join(action_strings))
         self.state.window.refresh()
 
     @classmethod
@@ -133,7 +135,16 @@ class ConsumableList(BaseInstanceList):
 
     def run(self) -> None:
         actions = []
-        actions.append(list_actions.ListTagSelected(999, ["T"]))
+        actions.append(list_actions.ListConsumableUpdate(999, ["U"]))
+        actions.append(list_actions.ListConsumableDelete(998, ["D"]))
+        actions.append(
+            list_actions.ListIncrementCurrentRating(997, ["KEY_RIGHT"], ["→"])
+        )
+        actions.append(
+            list_actions.ListDecrementCurrentRating(997, ["KEY_LEFT"], ["←"])
+        )
+        actions.append(list_actions.ListTagSelected(995, ["T"]))
+        actions.append(list_actions.ListUntagSelected(994, ["G"]))
         super()._init_run(actions)
 
     def tabulate(self) -> str:

@@ -4,6 +4,14 @@ from collections.abc import Sequence
 T = TypeVar("T")
 
 
+class _UnchangedSentinel:
+    def __str__(self) -> str:
+        return "Leave Unchanged"
+
+
+UNCHANGED_SENTINEL = _UnchangedSentinel()
+
+
 def sort_by(instances: Sequence[T], sort_key: str, reverse: bool = False) -> list[T]:
     # Thanks to Andrew Clark for solution to sorting list with NoneTypes https://stackoverflow.com/a/18411610
     return sorted(
@@ -19,8 +27,8 @@ def request_input(name: str, default: T = None, validator: Callable = None) -> T
     else:
         request_string = f"Provide a {name}: "
     value = input(request_string).strip()
-    if default:
-        value = value if len(value) else default
+    if default is not None and not len(value):
+        return default
     if validator is not None:
         while not validator(value):
             value = input(request_string).strip()

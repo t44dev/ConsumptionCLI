@@ -1,7 +1,7 @@
 # General Imports
 from argparse import ArgumentError, Namespace
 from datetime import datetime
-from collections.abc import Sequence 
+from collections.abc import Sequence, Mapping
 from abc import abstractmethod, ABC
 from sqlite3 import IntegrityError
 
@@ -11,7 +11,7 @@ from consumptionbackend.Status import Status
 from consumptionbackend.Series import Series
 from consumptionbackend.Personnel import Personnel
 from .list_handling import ConsumableList, SeriesList, PersonnelList
-from .utils import sort_by, request_input, confirm_action
+from .utils import sort_by, request_input, confirm_action, UNCHANGED_SENTINEL
 
 
 class CLIHandler(ABC):
@@ -145,18 +145,10 @@ class ConsumableHandler(CLIHandler):
         cls._prepare_args(args, set_mapping)
         # Find
         consumables = Consumable.find(**vars(where_mapping))
-        # Update
-        updated_consumables = []
         if len(consumables) == 0:
             return "No Consumables found."
-        elif len(consumables) > 1:
-            for consumable in consumables:
-                if confirm_action(f"update of {str(consumable)}"):
-                    updated_consumables.append(
-                        consumable.update_self(vars(set_mapping))
-                    )
-        else:
-            updated_consumables.append(consumables[0].update_self(vars(set_mapping)))
+        # Update
+        updated_consumables = cls.do_update(consumables, vars(set_mapping))
         # Create String
         if len(updated_consumables) > 0:
             return ConsumableList(
@@ -166,26 +158,95 @@ class ConsumableHandler(CLIHandler):
             return "No Consumable(s) updated."
 
     @classmethod
+    def do_update(
+        cls,
+        consumables: Sequence[Consumable],
+        set_mapping: Mapping,
+        force: bool = False,
+    ) -> Sequence[Consumable]:
+        updated_consumables = []
+        for consumable in consumables:
+            if force or confirm_action(f"update of {str(consumable)}"):
+                updated_consumables.append(consumable.update_self(set_mapping))
+        return updated_consumables
+
+    @classmethod
+    def update_fields(
+        cls, consumables: Sequence[Consumable], force: bool = False
+    ) -> Sequence[Consumable]:
+        # Setup
+        set_mapping = Namespace()
+
+        def converts(type):
+            def _converts(x):
+                try:
+                    type(x)
+                    return True
+                except ValueError:
+                    return False
+
+            return _converts
+
+        # Get attrs
+        name = request_input("name", UNCHANGED_SENTINEL, lambda x: len(x))
+        if name != UNCHANGED_SENTINEL:
+            setattr(set_mapping, "name", name)
+        type = request_input("type", UNCHANGED_SENTINEL, lambda x: len(x))
+        if name != UNCHANGED_SENTINEL:
+            setattr(set_mapping, "type", type)
+        status = request_input(
+            f"status i.e. {[e.name for e in Status]}",
+            UNCHANGED_SENTINEL,
+            lambda x: x in [e.name for e in Status],
+        )
+        if status != UNCHANGED_SENTINEL:
+            setattr(set_mapping, "status", status)
+        parts = request_input(f"number of parts", UNCHANGED_SENTINEL, converts(int))
+        if parts != UNCHANGED_SENTINEL:
+            setattr(set_mapping, "parts", int(parts))
+        max_parts = request_input(
+            f"max number of parts",
+            UNCHANGED_SENTINEL,
+            lambda x: converts(int)(x) or x in ["None", "Null", "?"],
+        )
+        if max_parts != UNCHANGED_SENTINEL:
+            setattr(set_mapping, "max_parts", max_parts)
+        completions = request_input(
+            f"number of completions", UNCHANGED_SENTINEL, converts(int)
+        )
+        if completions != UNCHANGED_SENTINEL:
+            setattr(set_mapping, "completions", int(completions))
+        rating = request_input(f"rating", UNCHANGED_SENTINEL, converts(float))
+        if rating != UNCHANGED_SENTINEL:
+            setattr(set_mapping, "rating", float(rating))
+        cls._prepare_args(Namespace(date_format="%Y"), set_mapping)
+        if len(vars(set_mapping)) > 0:
+            return cls.do_update(consumables, vars(set_mapping), force)
+        else:
+            return consumables
+
+    @classmethod
     def cli_delete(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
         # Prepare Arguments
         cls._prepare_args(args, where)
         # Find
         consumables = Consumable.find(**vars(where))
-        # Delete
-        deleted = 0
         if len(consumables) == 0:
             return "No Consumables found."
-        elif len(consumables) > 1:
-            for consumable in consumables:
-                if confirm_action(f"deletion of {str(consumable)}"):
-                    consumable.delete_self()
-                    deleted += 1
-        else:
-            consumables[0].delete_self()
-            deleted += 1
+        # Delete
+        deleted = cls.do_delete(consumables)
         # Create String
         return f"{deleted} Consumable(s) deleted."
+
+    @classmethod
+    def do_delete(cls, consumables: Sequence[Consumable], force: bool = False) -> int:
+        deleted = 0
+        for consumable in consumables:
+            if force or confirm_action(f"deletion of {str(consumable)}"):
+                consumable.delete_self()
+                deleted += 1
+        return deleted
 
     @classmethod
     def cli_start(cls, args: Namespace) -> str:
@@ -206,50 +267,61 @@ class ConsumableHandler(CLIHandler):
         cls._prepare_args(args, where)
         # Find
         consumables = Consumable.find(**vars(where))
+        if len(consumables) == 0:
+            return "No Consumables found."
         # Tag
-        return cls.do_tag(consumables, getattr(args, "tag", None))
+        tagged = cls.do_tag(consumables, getattr(args, "tag", None))
+        return f"{tagged} Consumable(s) tagged."
 
     @classmethod
-    def do_tag(cls, consumables: Sequence[Consumable], tag: str = None) -> str:
+    def do_tag(
+        cls, consumables: Sequence[Consumable], tag: str = None, force: bool = False
+    ) -> int:
         # Get tag
         if tag is None:
             tag = request_input("tag")
         # Tag
         tagged = 0
-        if len(consumables) == 0:
-            return "No Consumables found."
-        else:
-            for consumable in consumables:
-                if len(consumables) == 1 or confirm_action(f"tagging of {str(consumable)} with '{tag}'"):
-                    if consumable.add_tag(tag):
-                        tagged += 1
-        return f"{tagged} Consumable(s) tagged."
+        for consumable in consumables:
+            if (
+                force
+                or len(consumables) == 1
+                or confirm_action(f"tagging of {str(consumable)} with '{tag}'")
+            ):
+                if consumable.add_tag(tag):
+                    tagged += 1
+        return tagged
 
     @classmethod
     def cli_untag(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
         # Prepare Arguments
         cls._prepare_args(args, where)
-        if "tag" in args:
-            tag = getattr(args, "tag")
-        else:
-            tag = request_input("tag")
         # Find
         consumables = Consumable.find(**vars(where))
-        # Untag
-        untagged = 0
         if len(consumables) == 0:
             return "No Consumables found."
-        elif len(consumables) > 1:
-            for consumable in consumables:
-                if confirm_action(f"removal of tag '{tag}' from {str(consumable)}"):
-                    if consumable.remove_tag(tag):
-                        untagged += 1
-        else:
-            consumables[0].remove_tag(tag)
-            untagged += 1
+        # Untag
+        untagged = cls.do_untag(consumables, getattr(args, "tag", None))
         # Create string
         return f"{untagged} Consumable(s) untagged."
+
+    @classmethod
+    def do_untag(
+        cls, consumables: Sequence[Consumable], tag: str = None, force: bool = False
+    ) -> int:
+        # Get tag
+        if tag is None:
+            tag = request_input("tag")
+        # Untag
+        untagged = 0
+        for consumable in consumables:
+            if force or confirm_action(
+                f"removal of tag '{tag}' from {str(consumable)}"
+            ):
+                if consumable.remove_tag(tag):
+                    untagged += 1
+        return untagged
 
     @classmethod
     def cli_series(cls, args: Namespace) -> str:
