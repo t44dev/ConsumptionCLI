@@ -138,10 +138,10 @@ class ConsumableList(BaseInstanceList):
         actions.append(list_actions.ListConsumableUpdate(999, ["U"]))
         actions.append(list_actions.ListConsumableDelete(998, ["D"]))
         actions.append(
-            list_actions.ListIncrementCurrentRating(997, ["KEY_RIGHT"], ["→"])
+            list_actions.ListIncrementCurrentRating(997, ["L", "KEY_RIGHT"], ["L", "→"])
         )
         actions.append(
-            list_actions.ListDecrementCurrentRating(997, ["KEY_LEFT"], ["←"])
+            list_actions.ListDecrementCurrentRating(997, ["H", "KEY_LEFT"], ["H", "←"])
         )
         actions.append(list_actions.ListTagSelected(995, ["T"]))
         actions.append(list_actions.ListUntagSelected(994, ["G"]))
