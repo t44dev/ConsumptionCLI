@@ -7,7 +7,7 @@
 - [ ] Add badges/shields to README
 - [ ] Update readme
 - [x] Allow setting of NoneType for max_parts
-- [ ] Tag Search should be an AND not an OR over the searched tags
+- [x] Tag Search should be an AND not an OR over the searched tags
 
 - [x] ListAction class
 - [x] Classes in parsers.py for better SOC
