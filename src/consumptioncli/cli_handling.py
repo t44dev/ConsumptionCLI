@@ -11,7 +11,7 @@ from consumptionbackend.Status import Status
 from consumptionbackend.Series import Series
 from consumptionbackend.Personnel import Personnel
 from .list_handling import ConsumableList, SeriesList, PersonnelList
-from .utils import sort_by, request_input, confirm_action, UNCHANGED_SENTINEL
+from .utils import request_input, confirm_action, UNCHANGED_SENTINEL
 
 
 class CLIHandler(ABC):
@@ -112,17 +112,14 @@ class ConsumableHandler(CLIHandler):
         where = getattr(args, "where", Namespace())
         # Prepare Arguments
         cls._prepare_args(args, where)
-        # Create String
+        # Get Consumables
         consumables = Consumable.find(**vars(where))
-        # Ordering
-        consumables = sort_by(
-            consumables, getattr(args, "order"), getattr(args, "reverse")
-        )
         results = len(consumables)
         # Static vs. Dynamic
         static = getattr(args, "static", False)
         if results > 0:
             consumable_list = ConsumableList(consumables, getattr(args, "date_format"))
+            consumable_list.order_by(getattr(args, "order"), getattr(args, "reverse"))
             if static:
                 return consumable_list.tabulate() + f"\n{results} Result(s)..."
             else:
@@ -459,7 +456,7 @@ class ConsumableHandler(CLIHandler):
             for pers_remove in selected_personnel:
                 if consumables[0].remove_personnel(pers_remove):
                     consumables_altered += 1
-        return f"{len(selected_personnel)} Personnel removed from {consumables_altered} Consumable(s)'."
+        return f"{len(selected_personnel)} Personnel removed from {consumables_altered} Consumable(s)."
 
     @classmethod
     def no_action(cls, args: Namespace) -> str:
@@ -557,15 +554,14 @@ class SeriesHandler(CLIHandler):
     @classmethod
     def cli_list(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
-        # Create String
+        # Get Series
         series = Series.find(**vars(where))
-        # Ordering
-        series = sort_by(series, getattr(args, "order"), getattr(args, "reverse"))
         results = len(series)
         # Static vs Dynamic
         static = getattr(args, "static", False)
         if results > 0:
             series_list = SeriesList(series)
+            series_list.order_by(getattr(args, "order"), getattr(args, "reverse"))
             if static:
                 return series_list.tabulate() + f"\n{results} Result(s)..."
             else:
@@ -669,14 +665,14 @@ class PersonnelHandler(CLIHandler):
     @classmethod
     def cli_list(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
-        # Create String
+        # Get Personnel
         personnel = Personnel.find(**vars(where))
-        # Ordering
-        personnel = sort_by(personnel, getattr(args, "order"), getattr(args, "reverse"))
         results = len(personnel)
+        # Static vs. Dynamic
         static = getattr(args, "static", False)
         if results > 0:
             personnel_list = PersonnelList(personnel)
+            personnel_list.order_by(getattr(args, "order"), getattr(args, "reverse"))
             if static:
                 return personnel_list.tabulate() + f"\n{results} Result(s)..."
             else:

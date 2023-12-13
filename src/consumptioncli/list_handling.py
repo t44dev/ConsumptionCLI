@@ -22,6 +22,14 @@ class ListState:
         self.active = True
         self.window = None
 
+    def order_by(self, key: str, reverse: bool = False) -> None:
+        # Thanks to Andrew Clark for solution to sorting list with NoneTypes https://stackoverflow.com/a/18411610
+        self.instances = sorted(
+            self.instances,
+            key=lambda a: (getattr(a, key) is not None, getattr(a, key)),
+            reverse=reverse,
+        )
+
 
 class BaseInstanceList(ABC):
     def __init__(self, instances: Sequence[DatabaseEntity]) -> None:
@@ -54,7 +62,12 @@ class BaseInstanceList(ABC):
 
     def _init_run(self, actions: Sequence[list_actions.ListAction]) -> None:
         # Setup State
-        actions = BaseInstanceList._setup_actions(actions)
+        actions.append(list_actions.ListEnd(-9999, ["Q"]))
+        actions = BaseInstanceList._setup_actions(
+            BaseInstanceList._add_move_actions(
+                BaseInstanceList._add_select_actions(actions)
+            )
+        )
         self.state.window = BaseInstanceList._init_curses()
         # Render/Action Loop
         self._run(actions)
@@ -114,16 +127,30 @@ class BaseInstanceList(ABC):
         self.state.window.refresh()
 
     @classmethod
-    def _setup_actions(
+    def _add_select_actions(
+        cls, actions: Sequence[list_actions.ListAction]
+    ) -> Sequence[list_actions.ListAction]:
+        actions.append(list_actions.ListSelect(9997, ["\n", "KEY_ENTER"], ["Enter"]))
+        actions.append(list_actions.ListDeselectAll(9996, ["A"]))
+        return actions
+
+    @classmethod
+    def _add_move_actions(
         cls, actions: Sequence[list_actions.ListAction]
     ) -> Sequence[list_actions.ListAction]:
         actions.append(list_actions.ListUp(9999, ["K", "KEY_UP"], ["K", "↑"]))
         actions.append(list_actions.ListDown(9998, ["J", "KEY_DOWN"], ["J", "↓"]))
-        actions.append(list_actions.ListSelect(9997, ["\n", "KEY_ENTER"], ["Enter"]))
-        actions.append(list_actions.ListDeselectAll(9996, ["A"]))
-        actions.append(list_actions.ListQuit(-9999, ["Q"]))
+        return actions
+
+    @classmethod
+    def _setup_actions(
+        cls, actions: Sequence[list_actions.ListAction]
+    ) -> Sequence[list_actions.ListAction]:
         actions = sorted(actions, key=lambda x: x.priority, reverse=True)
         return actions
+
+    def order_by(self, key: str, reverse: bool = False) -> None:
+        self.state.order_by(key, reverse)
 
 
 class ConsumableList(BaseInstanceList):
@@ -145,6 +172,8 @@ class ConsumableList(BaseInstanceList):
         )
         actions.append(list_actions.ListTagSelected(995, ["T"]))
         actions.append(list_actions.ListUntagSelected(994, ["G"]))
+        actions.append(list_actions.ListSetSeriesSelected(993, ["S"]))
+        actions.append(list_actions.ListPersonnelSelected(992, ["P"]))
         super()._init_run(actions)
 
     def tabulate(self) -> str:
