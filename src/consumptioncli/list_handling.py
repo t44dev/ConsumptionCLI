@@ -138,7 +138,7 @@ class BaseInstanceList(ABC):
     def _add_move_actions(
         cls, actions: Sequence[list_actions.ListAction]
     ) -> Sequence[list_actions.ListAction]:
-        actions.append(list_actions.ListUp(9999, ["K", "KEY_UP"], ["K", "↑"]))
+        actions.append(list_actions.Up(9999, ["K", "KEY_UP"], ["K", "↑"]))
         actions.append(list_actions.ListDown(9998, ["J", "KEY_DOWN"], ["J", "↓"]))
         return actions
 
@@ -162,18 +162,18 @@ class ConsumableList(BaseInstanceList):
 
     def run(self) -> None:
         actions = []
-        actions.append(list_actions.ListConsumableUpdate(999, ["U"]))
-        actions.append(list_actions.ListConsumableDelete(998, ["D"]))
+        actions.append(list_actions.ListConsumableUpdateSelected(999, ["U"]))
+        actions.append(list_actions.ListConsumableDeleteSelected(998, ["D"]))
         actions.append(
-            list_actions.ListIncrementCurrentRating(997, ["L", "KEY_RIGHT"], ["L", "→"])
+            list_actions.ListIncRatingCurrent(997, ["L", "KEY_RIGHT"], ["L", "→"])
         )
         actions.append(
-            list_actions.ListDecrementCurrentRating(997, ["H", "KEY_LEFT"], ["H", "←"])
+            list_actions.ListDecRatingCurrent(997, ["H", "KEY_LEFT"], ["H", "←"])
         )
         actions.append(list_actions.ListTagSelected(995, ["T"]))
         actions.append(list_actions.ListUntagSelected(994, ["G"]))
-        actions.append(list_actions.ListSetSeriesSelected(993, ["S"]))
-        actions.append(list_actions.ListPersonnelSelected(992, ["P"]))
+        actions.append(list_actions.ListSetConsumableSeriesSelected(993, ["S"]))
+        actions.append(list_actions.ListAddConsumablePersonnelSelected(992, ["P"]))
         super()._init_run(actions)
 
     def tabulate(self) -> str:

@@ -177,7 +177,7 @@ class ListUntagSelected(ListAction):
         return state
 
 
-class ListSetSeriesSelected(ListAction):
+class ListSetConsumableSeriesSelected(ListAction):
     ACTION_NAME: str = "Set Selected Series"
 
     def run(self, state: list_handling.ListState) -> list_handling.ListState:
@@ -208,7 +208,7 @@ class ListSetSeriesSelected(ListAction):
         return state
 
 
-class ListPersonnelSelected(ListAction):
+class ListAddConsumablePersonnelSelected(ListAction):
     ACTION_NAME: str = "Add Selected Personnel"
 
     def run(self, state: list_handling.ListState) -> list_handling.ListState:
@@ -235,5 +235,75 @@ class ListPersonnelSelected(ListAction):
             for consumable in selected_consumables:
                 consumable.add_personnel(personnel)
         # Restore state and return
+        state.window = list_handling.BaseInstanceList._init_curses()
+        return state
+
+# Series
+
+class ListSeriesUpdateSelected(ListAction):
+    ACTION_NAME: str = "Update Selected"
+
+    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+        list_handling.BaseInstanceList._uninit_curses(state.window)
+        updates = cli_handling.SeriesHandler.update_fields(
+            state.selected, force=True
+        )
+        for i, cons in enumerate(state.instances):
+            for updated in updates:
+                if cons == updated:
+                    state.instances[i] = updated
+                    break
+        state.selected = set(updates)
+        state.window = list_handling.BaseInstanceList._init_curses()
+        return state
+
+
+class ListSeriesDeleteSelected(ListAction):
+    ACTION_NAME: str = "Delete Selected"
+
+    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+        list_handling.BaseInstanceList._uninit_curses(state.window)
+        if confirm_action("deletion of selected Series"):
+            cli_handling.SeriesHandler.do_delete(state.selected, force=True)
+        state.instances = list(
+            filter(lambda x: x not in state.selected, state.instances)
+        )
+        state.selected = set()
+        state.current = min(len(state.instances) - 1, state.current)
+        state.window = list_handling.BaseInstanceList._init_curses()
+        return state
+
+# Personnel
+
+class ListPersonnelUpdateSelected(ListAction):
+    ACTION_NAME: str = "Update Selected"
+
+    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+        list_handling.BaseInstanceList._uninit_curses(state.window)
+        updates = cli_handling.PersonnelHandler.update_fields(
+            state.selected, force=True
+        )
+        for i, cons in enumerate(state.instances):
+            for updated in updates:
+                if cons == updated:
+                    state.instances[i] = updated
+                    break
+        state.selected = set(updates)
+        state.window = list_handling.BaseInstanceList._init_curses()
+        return state
+
+
+class ListPersonnelDeleteSelected(ListAction):
+    ACTION_NAME: str = "Delete Selected"
+
+    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+        list_handling.BaseInstanceList._uninit_curses(state.window)
+        if confirm_action("deletion of selected Personnel"):
+            cli_handling.PersonnelHandler.do_delete(state.selected, force=True)
+        state.instances = list(
+            filter(lambda x: x not in state.selected, state.instances)
+        )
+        state.selected = set()
+        state.current = min(len(state.instances) - 1, state.current)
         state.window = list_handling.BaseInstanceList._init_curses()
         return state

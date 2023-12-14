@@ -14,6 +14,7 @@
 
 ## Next
 - [ ] Adaptive name truncation
+- [ ] List all tags
 - [ ] Delete returns deleted records
 - [ ] Dataclasses/Attrs
 - [ ] Further Tests

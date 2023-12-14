@@ -4,12 +4,17 @@ from collections.abc import Sequence
 T = TypeVar("T")
 
 
-class _UnchangedSentinel:
+class _SentinelClass:
+
+    def __init__(self, name : str) -> None:
+        self.name = name
+
     def __str__(self) -> str:
-        return "Leave Unchanged"
+        return self.name 
 
 
-UNCHANGED_SENTINEL = _UnchangedSentinel()
+UNCHANGED_SENTINEL = _SentinelClass("Leave Unchanged")
+NONE_SENTINEL = _SentinelClass("None")
 
 
 def sort_by(instances: Sequence[T], sort_key: str, reverse: bool = False) -> list[T]:
@@ -21,13 +26,13 @@ def sort_by(instances: Sequence[T], sort_key: str, reverse: bool = False) -> lis
     )
 
 
-def request_input(name: str, default: T = None, validator: Callable = None) -> T:
+def request_input(name: str, default: T = NONE_SENTINEL, validator: Callable = None) -> T:
     if default is not None:
         request_string = f"Provide a {name} (Default : {default}): "
     else:
         request_string = f"Provide a {name}: "
     value = input(request_string).strip()
-    if default is not None and not len(value):
+    if default is not NONE_SENTINEL and not len(value):
         return default
     if validator is not None:
         while not validator(value):
