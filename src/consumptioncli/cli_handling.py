@@ -6,6 +6,7 @@ from abc import abstractmethod, ABC
 from sqlite3 import IntegrityError
 
 # Consumption Imports
+from consumptionbackend.Database import DatabaseEntity
 from consumptionbackend.Consumable import Consumable
 from consumptionbackend.Status import Status
 from consumptionbackend.Series import Series
@@ -41,7 +42,29 @@ class CLIHandler(ABC):
 
     @classmethod
     @abstractmethod
+    def do_update(
+        cls,
+        instances: Sequence[DatabaseEntity],
+        set_mapping: Mapping,
+        force: bool = False,
+    ) -> Sequence[DatabaseEntity]:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def update_fields(
+        cls, instances: Sequence[DatabaseEntity], force: bool = False
+    ) -> Sequence[DatabaseEntity]:
+        pass
+
+    @classmethod
+    @abstractmethod
     def cli_delete(cls, args: Namespace) -> str:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def do_delete(cls, instances: Sequence[DatabaseEntity], force: bool = False) -> int:
         pass
 
     @classmethod
@@ -157,15 +180,15 @@ class ConsumableHandler(CLIHandler):
     @classmethod
     def do_update(
         cls,
-        consumables: Sequence[Consumable],
+        instances: Sequence[Consumable],
         set_mapping: Mapping,
         force: bool = False,
     ) -> Sequence[Consumable]:
         updated_consumables = []
-        for consumable in consumables:
+        for consumable in instances:
             if (
                 force
-                or len(consumables) == 1
+                or len(instances) == 1
                 or confirm_action(f"update of {str(consumable)}")
             ):
                 updated_consumables.append(consumable.update_self(set_mapping))
@@ -173,7 +196,7 @@ class ConsumableHandler(CLIHandler):
 
     @classmethod
     def update_fields(
-        cls, consumables: Sequence[Consumable], force: bool = False
+        cls, instances: Sequence[Consumable], force: bool = False
     ) -> Sequence[Consumable]:
         # Setup
         set_mapping = Namespace()
@@ -222,9 +245,9 @@ class ConsumableHandler(CLIHandler):
             setattr(set_mapping, "rating", float(rating))
         cls._prepare_args(Namespace(date_format="%Y"), set_mapping)
         if len(vars(set_mapping)) > 0:
-            return cls.do_update(consumables, vars(set_mapping), force)
+            return cls.do_update(instances, vars(set_mapping), force)
         else:
-            return consumables
+            return instances
 
     @classmethod
     def cli_delete(cls, args: Namespace) -> str:
@@ -241,12 +264,12 @@ class ConsumableHandler(CLIHandler):
         return f"{deleted} Consumable(s) deleted."
 
     @classmethod
-    def do_delete(cls, consumables: Sequence[Consumable], force: bool = False) -> int:
+    def do_delete(cls, instances: Sequence[Consumable], force: bool = False) -> int:
         deleted = 0
-        for consumable in consumables:
+        for consumable in instances:
             if (
                 force
-                or len(consumables) == 1
+                or len(instances) == 1
                 or confirm_action(f"deletion of {str(consumable)}")
             ):
                 consumable.delete_self()
@@ -581,49 +604,68 @@ class SeriesHandler(CLIHandler):
             )
         # Find
         series = Series.find(**vars(where_mapping))
-        # Update
-        updated_series = []
         if len(series) == 0:
             return "No Series found."
-        elif len(series) > 1:
-            for ser in series:
-                if confirm_action(f"update of {str(ser)}"):
-                    updated_series.append(ser.update_self(vars(set_mapping)))
+        # Update
+        updated_series = cls.do_update(series, vars(set_mapping))
         # Create String
-        else:
-            updated_series.append(series[0].update_self(vars(set_mapping)))
         if len(updated_series) > 0:
             return SeriesList(updated_series).tabulate()
         else:
             return "No Series updated."
 
     @classmethod
+    def do_update(
+        cls, instances: Sequence[Series], set_mapping: Mapping, force: bool = False
+    ) -> Sequence[Series]:
+        updated_series = []
+        for ser in instances:
+            if force or len(instances) == 1 or confirm_action(f"update of {str(ser)}"):
+                updated_series.append(ser.update_self(set_mapping))
+        return updated_series
+
+    @classmethod
+    def update_fields(
+        cls, instances: Sequence[Series], force: bool = False
+    ) -> Sequence[Series]:
+        # Setup
+        set_mapping = Namespace()
+
+        # Get attrs
+        name = request_input("name", UNCHANGED_SENTINEL, lambda x: len(x))
+        if name != UNCHANGED_SENTINEL:
+            setattr(set_mapping, "name", name)
+
+        if len(vars(set_mapping)) > 0:
+            return cls.do_update(instances, vars(set_mapping), force)
+        else:
+            return instances
+
+    @classmethod
     def cli_delete(cls, args: Namespace) -> str:
         where = getattr(args, "where", Namespace())
         # Find
         series = Series.find(**vars(where))
+        series = list(filter(lambda x: x.id != -1), series)
         # Delete
-        deleted = 0
         if len(series) == 0:
             return "No Series found."
-        elif len(series) > 1:
-            for ser in series:
-                if confirm_action(f"deletion of {str(ser)}"):
-                    try:
-                        ser.delete_self()
-                        deleted += 1
-                    except IntegrityError:
-                        print(f"{deleted} Series deleted.")
-                        raise ArgumentError(None, "Cannot delete Series with -1 ID")
+        deleted = cls.do_delete(series)
         # Create String
-        else:
-            try:
-                series[0].delete_self()
-                deleted += 1
-            except IntegrityError:
-                print(f"{deleted} Series deleted.")
-                raise ArgumentError(None, "Cannot delete Series with -1 ID")
         return f"{deleted} Series deleted."
+
+    @classmethod
+    def do_delete(cls, instances: Sequence[DatabaseEntity], force: bool = False) -> int:
+        deleted = 0
+        for ser in instances:
+            if (
+                force
+                or len(instances) == 1
+                or confirm_action(f"deletion of {str(ser)}")
+            ):
+                ser.delete_self()
+                deleted += 1
+        return deleted
 
     @classmethod
     def no_action(cls, args: Namespace) -> str:
@@ -693,20 +735,47 @@ class PersonnelHandler(CLIHandler):
         # Find
         personnel = Personnel.find(**vars(where_mapping))
         # Update
-        updated_personnel = []
         if len(personnel) == 0:
             return "No Personnel found."
-        elif len(personnel) > 1:
-            for pers in personnel:
-                if confirm_action(f"update of {str(pers)}"):
-                    updated_personnel.append(pers.update_self(vars(set_mapping)))
+        updated_personnel = cls.do_update(personnel, vars(set_mapping))
         # Create String
-        else:
-            updated_personnel.append(personnel[0].update_self(vars(set_mapping)))
         if len(updated_personnel) > 0:
             return PersonnelList(updated_personnel).tabulate()
         else:
             return "No Personnel updated."
+
+    @classmethod
+    def do_update(
+        cls, instances: Sequence[Personnel], set_mapping: Mapping, force: bool = False
+    ) -> Sequence[Personnel]:
+        updated_personnel = []
+        for pers in instances:
+            if force or len(instances) == 1 or confirm_action(f"update of {str(pers)}"):
+                updated_personnel.append(pers.update_self(set_mapping))
+        return updated_personnel
+
+    @classmethod
+    def update_fields(
+        cls, instances: Sequence[DatabaseEntity], force: bool = False
+    ) -> Sequence[DatabaseEntity]:
+        # Setup
+        set_mapping = Namespace()
+
+        # Get attrs
+        first_name = request_input("first name", UNCHANGED_SENTINEL, lambda x: len(x))
+        if first_name != UNCHANGED_SENTINEL:
+            setattr(set_mapping, "first_name", first_name)
+        pseudonym = request_input("pseudonym", UNCHANGED_SENTINEL, lambda x: len(x))
+        if pseudonym != UNCHANGED_SENTINEL:
+            setattr(set_mapping, "pseudonym", pseudonym)
+        last_name = request_input("last name", UNCHANGED_SENTINEL, lambda x: len(x))
+        if last_name != UNCHANGED_SENTINEL:
+            setattr(set_mapping, "last_name", last_name)
+
+        if len(vars(set_mapping)) > 0:
+            return cls.do_update(instances, vars(set_mapping), force)
+        else:
+            return instances
 
     @classmethod
     def cli_delete(cls, args: Namespace) -> str:
@@ -714,19 +783,24 @@ class PersonnelHandler(CLIHandler):
         # Find
         personnel = Personnel.find(**vars(where))
         # Delete
-        deleted = 0
         if len(personnel) == 0:
             return "No Personnel found."
-        elif len(personnel) > 1:
-            for pers in personnel:
-                if confirm_action(f"deletion of {str(pers)}"):
-                    pers.delete_self()
-                    deleted += 1
+        deleted = cls.do_delete(personnel)
         # Create String
-        else:
-            personnel[0].delete_self()
-            deleted += 1
         return f"{deleted} Personnel deleted."
+
+    @classmethod
+    def do_delete(cls, instances: Sequence[Personnel], force: bool = False) -> int:
+        deleted = 0
+        for pers in instances:
+            if (
+                force
+                or len(instances) == 1
+                or confirm_action(f"deletion of {str(pers)}")
+            ):
+                pers.delete_self()
+                deleted += 1
+        return deleted
 
     @classmethod
     def no_action(cls, args: Namespace) -> str:

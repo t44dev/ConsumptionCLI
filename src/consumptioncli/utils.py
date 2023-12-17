@@ -5,12 +5,11 @@ T = TypeVar("T")
 
 
 class _SentinelClass:
-
-    def __init__(self, name : str) -> None:
+    def __init__(self, name: str) -> None:
         self.name = name
 
     def __str__(self) -> str:
-        return self.name 
+        return self.name
 
 
 UNCHANGED_SENTINEL = _SentinelClass("Leave Unchanged")
@@ -26,7 +25,9 @@ def sort_by(instances: Sequence[T], sort_key: str, reverse: bool = False) -> lis
     )
 
 
-def request_input(name: str, default: T = NONE_SENTINEL, validator: Callable = None) -> T:
+def request_input(
+    name: str, default: T = NONE_SENTINEL, validator: Callable = None
+) -> T:
     if default is not None:
         request_string = f"Provide a {name} (Default : {default}): "
     else:

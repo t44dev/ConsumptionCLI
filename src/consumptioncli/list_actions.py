@@ -238,16 +238,16 @@ class ListAddConsumablePersonnelSelected(ListAction):
         state.window = list_handling.BaseInstanceList._init_curses()
         return state
 
+
 # Series
 
-class ListSeriesUpdateSelected(ListAction):
+
+class ListSeriesUpdate(ListAction):
     ACTION_NAME: str = "Update Selected"
 
     def run(self, state: list_handling.ListState) -> list_handling.ListState:
         list_handling.BaseInstanceList._uninit_curses(state.window)
-        updates = cli_handling.SeriesHandler.update_fields(
-            state.selected, force=True
-        )
+        updates = cli_handling.SeriesHandler.update_fields(state.selected, force=True)
         for i, cons in enumerate(state.instances):
             for updated in updates:
                 if cons == updated:
@@ -258,7 +258,7 @@ class ListSeriesUpdateSelected(ListAction):
         return state
 
 
-class ListSeriesDeleteSelected(ListAction):
+class ListSeriesDelete(ListAction):
     ACTION_NAME: str = "Delete Selected"
 
     def run(self, state: list_handling.ListState) -> list_handling.ListState:
@@ -273,9 +273,11 @@ class ListSeriesDeleteSelected(ListAction):
         state.window = list_handling.BaseInstanceList._init_curses()
         return state
 
+
 # Personnel
 
-class ListPersonnelUpdateSelected(ListAction):
+
+class ListPersonnelUpdate(ListAction):
     ACTION_NAME: str = "Update Selected"
 
     def run(self, state: list_handling.ListState) -> list_handling.ListState:
@@ -293,7 +295,7 @@ class ListPersonnelUpdateSelected(ListAction):
         return state
 
 
-class ListPersonnelDeleteSelected(ListAction):
+class ListPersonnelDelete(ListAction):
     ACTION_NAME: str = "Delete Selected"
 
     def run(self, state: list_handling.ListState) -> list_handling.ListState:
