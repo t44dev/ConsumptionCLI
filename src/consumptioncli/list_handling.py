@@ -222,6 +222,7 @@ class SeriesList(BaseInstanceList):
         actions = []
         actions.append(list_actions.ListSeriesUpdate(999, ["U"]))
         actions.append(list_actions.ListSeriesDelete(998, ["D"]))
+        actions.append(list_actions.ListSetSeriesConsumable(997, ["C"]))
         super()._init_run(actions)
 
     def tabulate(self) -> str:
@@ -238,6 +239,7 @@ class PersonnelList(BaseInstanceList):
         actions = []
         actions.append(list_actions.ListPersonnelUpdate(999, ["U"]))
         actions.append(list_actions.ListPersonnelDelete(998, ["D"]))
+        actions.append(list_actions.ListAddPersonnelConsumableSelected(997, ["C"]))
         super()._init_run(actions)
 
     def tabulate(self) -> str:

@@ -2,7 +2,7 @@
 ## Current
 - [ ] Force flag on update and delete
 - [ ] "View" page for entities
-- [ ] Expand interactive list actions
+- [x] Expand interactive list actions
 - [ ] Log file
 - [ ] Add badges/shields to README
 - [ ] Update readme

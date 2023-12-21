@@ -209,7 +209,7 @@ class ListSetConsumableSeriesSelected(ListAction):
 
 
 class ListAddConsumablePersonnelSelected(ListAction):
-    ACTION_NAME: str = "Add Selected Personnel"
+    ACTION_NAME: str = "Add Personnel to Selected"
 
     def run(self, state: list_handling.ListState) -> list_handling.ListState:
         # Uninit current list
@@ -243,17 +243,18 @@ class ListAddConsumablePersonnelSelected(ListAction):
 
 
 class ListSeriesUpdate(ListAction):
-    ACTION_NAME: str = "Update Selected"
+    ACTION_NAME: str = "Update Current"
 
     def run(self, state: list_handling.ListState) -> list_handling.ListState:
         list_handling.BaseInstanceList._uninit_curses(state.window)
-        updates = cli_handling.SeriesHandler.update_fields(state.selected, force=True)
-        for i, cons in enumerate(state.instances):
-            for updated in updates:
-                if cons == updated:
-                    state.instances[i] = updated
-                    break
-        state.selected = set(updates)
+        current_instance = state.instances[state.current]
+        updated_instance = cli_handling.SeriesHandler.update_fields(
+            [current_instance], force=True
+        )[0]
+        state.instances[state.current] = updated_instance
+        if current_instance in state.selected:
+            state.selected.remove(current_instance)
+            state.selected.add(updated_instance)
         state.window = list_handling.BaseInstanceList._init_curses()
         return state
 
@@ -274,23 +275,53 @@ class ListSeriesDelete(ListAction):
         return state
 
 
+class ListSetSeriesConsumable(ListAction):
+    ACTION_NAME: str = "Add Consumables"
+
+    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+        # Uninit current list
+        list_handling.BaseInstanceList._uninit_curses(state.window)
+        # Get Consumables
+        consumable_list = list_handling.ConsumableList(Consumable.find())
+        consumable_list.state.order_by("name")
+        actions = consumable_list._setup_actions(
+            consumable_list._add_move_actions(
+                consumable_list._add_select_actions(
+                    [
+                        ListEnd(-999, ["C"], action_name="Confirm Selection"),
+                    ]
+                )
+            )
+        )
+        consumable_list.state.window = consumable_list._init_curses()
+        consumable_list._run(actions)
+        consumable_list._uninit_curses(consumable_list.state.window)
+        # Assign Series
+        selected_consumables: Sequence[Consumable] = consumable_list.state.selected
+        selected_series: Series = state.instances[state.current]
+        for consumable in selected_consumables:
+            consumable.set_series(selected_series)
+        # Restore state and return
+        state.window = list_handling.BaseInstanceList._init_curses()
+        return state
+
+
 # Personnel
 
 
 class ListPersonnelUpdate(ListAction):
-    ACTION_NAME: str = "Update Selected"
+    ACTION_NAME: str = "Update Current"
 
     def run(self, state: list_handling.ListState) -> list_handling.ListState:
         list_handling.BaseInstanceList._uninit_curses(state.window)
-        updates = cli_handling.PersonnelHandler.update_fields(
-            state.selected, force=True
-        )
-        for i, cons in enumerate(state.instances):
-            for updated in updates:
-                if cons == updated:
-                    state.instances[i] = updated
-                    break
-        state.selected = set(updates)
+        current_instance = state.instances[state.current]
+        updated_instance = cli_handling.PersonnelHandler.update_fields(
+            [current_instance], force=True
+        )[0]
+        state.instances[state.current] = updated_instance
+        if current_instance in state.selected:
+            state.selected.remove(current_instance)
+            state.selected.add(updated_instance)
         state.window = list_handling.BaseInstanceList._init_curses()
         return state
 
@@ -307,5 +338,36 @@ class ListPersonnelDelete(ListAction):
         )
         state.selected = set()
         state.current = min(len(state.instances) - 1, state.current)
+        state.window = list_handling.BaseInstanceList._init_curses()
+        return state
+
+
+class ListAddPersonnelConsumableSelected(ListAction):
+    ACTION_NAME: str = "Add Selected to Consumables"
+
+    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+        # Uninit current list
+        list_handling.BaseInstanceList._uninit_curses(state.window)
+        # Get Consumables to add
+        consumable_list = list_handling.ConsumableList(Consumable.find())
+        consumable_list.state.order_by("name")
+        actions = consumable_list._setup_actions(
+            consumable_list._add_move_actions(
+                consumable_list._add_select_actions(
+                    [ListEnd(-9999, keys=["C"], action_name="Confirm Selection")]
+                )
+            )
+        )
+        consumable_list.state.window = consumable_list._init_curses()
+        consumable_list._run(actions)
+        selected_personnel: Sequence[Personnel] = state.selected
+        consumable_list._uninit_curses(consumable_list.state.window)
+        # Get roles and assign
+        selected_consumables: Sequence[Consumable] = consumable_list.state.selected
+        for personnel in selected_personnel:
+            personnel.role = request_input(f"role of {personnel}")
+            for consumable in selected_consumables:
+                consumable.add_personnel(personnel)
+        # Restore state and return
         state.window = list_handling.BaseInstanceList._init_curses()
         return state
