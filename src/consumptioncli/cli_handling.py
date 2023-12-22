@@ -168,7 +168,8 @@ class ConsumableHandler(CLIHandler):
         if len(consumables) == 0:
             return "No Consumables found."
         # Update
-        updated_consumables = cls.do_update(consumables, vars(set_mapping))
+        force = getattr(args, "force")
+        updated_consumables = cls.do_update(consumables, vars(set_mapping), force)
         # Create String
         if len(updated_consumables) > 0:
             return ConsumableList(
@@ -259,7 +260,8 @@ class ConsumableHandler(CLIHandler):
         if len(consumables) == 0:
             return "No Consumables found."
         # Delete
-        deleted = cls.do_delete(consumables)
+        force = getattr(args, "force")
+        deleted = cls.do_delete(consumables, force)
         # Create String
         return f"{deleted} Consumable(s) deleted."
 
@@ -298,7 +300,8 @@ class ConsumableHandler(CLIHandler):
         if len(consumables) == 0:
             return "No Consumables found."
         # Tag
-        tagged = cls.do_tag(consumables, getattr(args, "tag", None))
+        force = getattr(args, "force")
+        tagged = cls.do_tag(consumables, getattr(args, "tag", None), force)
         return f"{tagged} Consumable(s) tagged."
 
     @classmethod
@@ -330,7 +333,8 @@ class ConsumableHandler(CLIHandler):
         if len(consumables) == 0:
             return "No Consumables found."
         # Untag
-        untagged = cls.do_untag(consumables, getattr(args, "tag", None))
+        force = getattr(args, "force")
+        untagged = cls.do_untag(consumables, getattr(args, "tag", None), force)
         # Create string
         return f"{untagged} Consumable(s) untagged."
 
@@ -359,6 +363,7 @@ class ConsumableHandler(CLIHandler):
         series_where = getattr(args, "series", Namespace())
         # Prepare Arguments
         cls._prepare_args(args, where)
+        force = getattr(args, "force")
         if len(vars(series_where)) == 0:
             raise ArgumentError(
                 None,
@@ -369,6 +374,8 @@ class ConsumableHandler(CLIHandler):
         set_series = None
         if len(series) == 0:
             return "No Series found."
+        elif len(series) > 1 and force:
+            raise ArgumentError(None, "Multiple Series match conditions with --force set.")
         elif len(series) > 1:
             for ser in series:
                 if confirm_action(f"usage of {str(ser)} as Series to set"):
@@ -385,7 +392,7 @@ class ConsumableHandler(CLIHandler):
             return "No Consumables found."
         elif len(consumables) > 1:
             for consumable in consumables:
-                if confirm_action(
+                if force or confirm_action(
                     f"setting Series of {str(consumable)} to {str(set_series)}"
                 ):
                     consumable.set_series(set_series)
@@ -401,6 +408,7 @@ class ConsumableHandler(CLIHandler):
         personnel_where = getattr(args, "personnel", Namespace())
         # Prepare Arguments
         cls._prepare_args(args, where)
+        force = getattr(args, "force")
         if "role" in args:
             role = getattr(args, "role")
         else:
@@ -417,7 +425,7 @@ class ConsumableHandler(CLIHandler):
         # Confirmations
         if len(personnel) > 1:
             for pers in personnel:
-                if confirm_action(f"selection of {str(pers)}"):
+                if force or confirm_action(f"selection of {str(pers)}"):
                     pers.role = role
                     selected_personnel.append(pers)
         else:
@@ -426,7 +434,7 @@ class ConsumableHandler(CLIHandler):
         # Add to Consumables
         if len(consumables) > 1:
             for consumable in consumables:
-                if confirm_action(
+                if force or confirm_action(
                     f"adding selected Personnel to {str(consumable)} as '{role}'"
                 ):
                     for pers_add in selected_personnel:
@@ -444,6 +452,7 @@ class ConsumableHandler(CLIHandler):
         personnel_where = getattr(args, "personnel", Namespace())
         # Prepare Arguments
         cls._prepare_args(args, where)
+        force = getattr(args, "force")
         if "role" in args:
             role = getattr(args, "role")
         else:
@@ -460,7 +469,7 @@ class ConsumableHandler(CLIHandler):
         # Confirmations
         if len(personnel) > 1:
             for pers in personnel:
-                if confirm_action(f"selection of {str(pers)}"):
+                if force or confirm_action(f"selection of {str(pers)}"):
                     pers.role = role
                     selected_personnel.append(pers)
         else:
@@ -469,7 +478,7 @@ class ConsumableHandler(CLIHandler):
         # Add to Consumables
         if len(consumables) > 1:
             for consumable in consumables:
-                if confirm_action(
+                if force or confirm_action(
                     f"removal of selected Personnel from {str(consumable)}"
                 ):
                     for pers_remove in selected_personnel:
@@ -607,7 +616,8 @@ class SeriesHandler(CLIHandler):
         if len(series) == 0:
             return "No Series found."
         # Update
-        updated_series = cls.do_update(series, vars(set_mapping))
+        force = getattr(args, "force")
+        updated_series = cls.do_update(series, vars(set_mapping), force)
         # Create String
         if len(updated_series) > 0:
             return SeriesList(updated_series).tabulate()
@@ -650,7 +660,8 @@ class SeriesHandler(CLIHandler):
         # Delete
         if len(series) == 0:
             return "No Series found."
-        deleted = cls.do_delete(series)
+        force = getattr(args, "force")
+        deleted = cls.do_delete(series, force)
         # Create String
         return f"{deleted} Series deleted."
 
@@ -737,7 +748,8 @@ class PersonnelHandler(CLIHandler):
         # Update
         if len(personnel) == 0:
             return "No Personnel found."
-        updated_personnel = cls.do_update(personnel, vars(set_mapping))
+        force = getattr(args, "force")
+        updated_personnel = cls.do_update(personnel, vars(set_mapping), force)
         # Create String
         if len(updated_personnel) > 0:
             return PersonnelList(updated_personnel).tabulate()
@@ -785,7 +797,8 @@ class PersonnelHandler(CLIHandler):
         # Delete
         if len(personnel) == 0:
             return "No Personnel found."
-        deleted = cls.do_delete(personnel)
+        force = getattr(args, "force")
+        deleted = cls.do_delete(personnel, force)
         # Create String
         return f"{deleted} Personnel deleted."
 

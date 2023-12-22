@@ -1,6 +1,6 @@
 # TODO LIST
 ## Current
-- [ ] Force flag on update and delete
+- [x] Force flag on update and delete
 - [ ] "View" page for entities
 - [x] Expand interactive list actions
 - [ ] Log file

@@ -116,6 +116,12 @@ class ConsumableParser(ChildParser):
         parser_update = parent_sp.add_parser(
             "update", aliases=["u"], help="update existing consumable"
         )
+        parser_update.add_argument(
+            "--force",
+            dest=f"force",
+            action="store_true",
+            help="complete action without confirmation",
+        )
         parser_update.set_defaults(mode="update")
         cls.add_where_args(parser_update)
         parser_set = parser_update.add_subparsers().add_parser("set", aliases=["s"])
@@ -126,6 +132,12 @@ class ConsumableParser(ChildParser):
         # Delete Consumable
         parser_delete = parent_sp.add_parser(
             "delete", aliases=["d"], help="delete existing consumable"
+        )
+        parser_delete.add_argument(
+            "--force",
+            dest=f"force",
+            action="store_true",
+            help="complete action without confirmation",
         )
         parser_delete.set_defaults(mode="delete")
         cls.add_where_args(parser_delete)
@@ -140,6 +152,12 @@ class ConsumableParser(ChildParser):
         parser_tag.add_argument(
             "--tag", dest="tag", default=argparse.SUPPRESS, help="tag to add"
         )
+        parser_tag.add_argument(
+            "--force",
+            dest=f"force",
+            action="store_true",
+            help="complete action without confirmation",
+        )
         cls.add_where_args(parser_tag)
 
     @classmethod
@@ -152,6 +170,12 @@ class ConsumableParser(ChildParser):
         parser_untag.add_argument(
             "--tag", dest="tag", default=argparse.SUPPRESS, help="tag to remove"
         )
+        parser_untag.add_argument(
+            "--force",
+            dest=f"force",
+            action="store_true",
+            help="complete action without confirmation",
+        )
         cls.add_where_args(parser_untag)
 
     @classmethod
@@ -159,6 +183,12 @@ class ConsumableParser(ChildParser):
         # Set Series
         parser_series = parent_sp.add_parser(
             "series", aliases=["ss"], help="set series of existing consumable"
+        )
+        parser_series.add_argument(
+            "--force",
+            dest=f"force",
+            action="store_true",
+            help="complete action without confirmation",
         )
         parser_series.set_defaults(mode="set_series")
         cls.add_where_args(parser_series)
@@ -169,6 +199,12 @@ class ConsumableParser(ChildParser):
     def _setup_personnel(cls, parent_sp) -> None:
         parser_personnel = parent_sp.add_parser(
             "personnel", aliases=["p"], help="manage personnel of existing consumable"
+        )
+        parser_personnel.add_argument(
+            "--force",
+            dest=f"force",
+            action="store_true",
+            help="complete action without confirmation",
         )
         parser_personnel.set_defaults(mode="personnel")
         cls.add_where_args(parser_personnel)
@@ -384,6 +420,12 @@ class SeriesParser(ChildParser):
         parser_update = parent_sp.add_parser(
             "update", aliases=["u"], help="update existing series"
         )
+        parser_update.add_argument(
+            "--force",
+            dest=f"force",
+            action="store_true",
+            help="complete action without confirmation",
+        )
         parser_update.set_defaults(mode="update")
         cls.add_where_args(parser_update)
         set_parser = parser_update.add_subparsers().add_parser("set", aliases=["s"])
@@ -394,6 +436,12 @@ class SeriesParser(ChildParser):
         # Delete Series
         parser_delete = parent_sp.add_parser(
             "delete", aliases=["d"], help="delete existing series"
+        )
+        parser_delete.add_argument(
+            "--force",
+            dest=f"force",
+            action="store_true",
+            help="complete action without confirmation",
         )
         parser_delete.set_defaults(mode="delete")
         cls.add_where_args(parser_delete)
@@ -489,6 +537,12 @@ class PersonnelParser(ChildParser):
         parser_update = parent_sp.add_parser(
             "update", aliases=["u"], help="update existing personnel"
         )
+        parser_update.add_argument(
+            "--force",
+            dest=f"force",
+            action="store_true",
+            help="complete action without confirmation",
+        )
         parser_update.set_defaults(mode="update")
         cls.add_set_args(parser_update)
         set_parser = parser_update.add_subparsers().add_parser("set", aliases=["s"])
@@ -499,6 +553,12 @@ class PersonnelParser(ChildParser):
         # Delete Series
         parser_delete = parent_sp.add_parser(
             "delete", aliases=["d"], help="delete existing personnel"
+        )
+        parser_delete.add_argument(
+            "--force",
+            dest=f"force",
+            action="store_true",
+            help="complete action without confirmation",
         )
         parser_delete.set_defaults(mode="delete")
         cls.add_where_args(parser_delete)
