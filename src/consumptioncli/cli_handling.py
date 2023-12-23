@@ -375,7 +375,9 @@ class ConsumableHandler(CLIHandler):
         if len(series) == 0:
             return "No Series found."
         elif len(series) > 1 and force:
-            raise ArgumentError(None, "Multiple Series match conditions with --force set.")
+            raise ArgumentError(
+                None, "Multiple Series match conditions with --force set."
+            )
         elif len(series) > 1:
             for ser in series:
                 if confirm_action(f"usage of {str(ser)} as Series to set"):
