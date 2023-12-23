@@ -3,7 +3,7 @@
 - [x] Force flag on update and delete
 - [ ] "View" page for entities
 - [x] Expand interactive list actions
-- [ ] Log file
+- [x] Log file
 - [ ] Add badges/shields to README
 - [ ] Update readme
 - [x] Allow setting of NoneType for max_parts
@@ -14,6 +14,7 @@
 
 ## Next
 - [ ] Adaptive name truncation
+- [ ] Meaningful Boolean returns
 - [ ] List all tags
 - [ ] Delete returns deleted records
 - [ ] Dataclasses/Attrs
