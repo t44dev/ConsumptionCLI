@@ -1,6 +1,7 @@
 # General Imports
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import Tuple
 from collections.abc import Sequence
 
 from consumptioncli import list_handling
@@ -12,7 +13,16 @@ from consumptionbackend.Personnel import Personnel
 from . import list_handling
 from . import cli_handling
 from .utils import confirm_action, request_input
+from .curses_handling import init_curses, uninit_curses
 
+def reinit_decorator(f):
+    def wrapper(*args, **kwargs):
+        uninit_curses()
+        result = f(*args, **kwargs)
+        init_curses()
+        return result
+    
+    return wrapper
 
 # General Actions
 
@@ -28,24 +38,24 @@ class ListAction(ABC):
         self.key_aliases = self.keys if key_alises is None else key_alises
 
     @abstractmethod
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         pass
 
 
 class ListUp(ListAction):
     ACTION_NAME: str = "Up"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         state.current = max(state.current - 1, 0)
-        return state
+        return state, True
 
 
 class ListDown(ListAction):
     ACTION_NAME: str = "Down"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         state.current = min(state.current + 1, len(state.instances) - 1)
-        return state
+        return state, True
 
 
 class ListEnd(ListAction):
@@ -60,36 +70,34 @@ class ListEnd(ListAction):
         super().__init__(priority, keys, key_alises)
         self.ACTION_NAME = action_name
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        state.active = False
-        return state
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+        return state, False
 
 
 class ListSelect(ListAction):
     ACTION_NAME: str = "Select"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         if state.instances[state.current] in state.selected:
             state.selected.remove(state.instances[state.current])
         else:
             state.selected.add(state.instances[state.current])
-        return state
+        return state, True
 
 
 class ListSelectEnd(ListSelect):
     ACTION_NAME: str = "Select and Confirm"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        state.active = False
-        return super().run(state)
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+        return super().run(state)[0], False
 
 
 class ListDeselectAll(ListAction):
     ACTION_NAME: str = "Deselect All"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         state.selected = set()
-        return state
+        return state, True 
 
 
 # Consumable Actions
@@ -98,8 +106,8 @@ class ListDeselectAll(ListAction):
 class ListConsumableUpdate(ListAction):
     ACTION_NAME: str = "Update Selected"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         updates = cli_handling.ConsumableHandler.update_fields(
             state.selected, force=True
         )
@@ -109,15 +117,14 @@ class ListConsumableUpdate(ListAction):
                     state.instances[i] = updated
                     break
         state.selected = set(updates)
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
+        return state, True
 
 
 class ListConsumableDelete(ListAction):
     ACTION_NAME: str = "Delete Selected"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         if confirm_action("deletion of selected Consumable(s)"):
             cli_handling.ConsumableHandler.do_delete(state.selected, force=True)
         state.instances = list(
@@ -125,26 +132,25 @@ class ListConsumableDelete(ListAction):
         )
         state.selected = set()
         state.current = min(len(state.instances) - 1, state.current)
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
+        return state, True
 
 
 class ListIncrementCurrentRating(ListAction):
     ACTION_NAME: str = "Increment Rating"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         cons: Consumable = state.instances[state.current]
         new_rating = 0.1 if cons.rating is None else min(10, cons.rating + 0.1)
         if new_rating != cons.rating:
             new_cons = cons.update_self({"rating": new_rating})
             state.instances[state.current] = new_cons
-        return state
+        return state, True
 
 
 class ListDecrementCurrentRating(ListAction):
     ACTION_NAME: str = "Decrement Rating"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         cons: Consumable = state.instances[state.current]
         new_rating = (
             None
@@ -154,90 +160,69 @@ class ListDecrementCurrentRating(ListAction):
         if new_rating != cons.rating:
             new_cons = cons.update_self({"rating": new_rating})
             state.instances[state.current] = new_cons
-        return state
+        return state, True
 
 
 class ListTagSelected(ListAction):
     ACTION_NAME: str = "Tag Selected"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator 
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         cli_handling.ConsumableHandler.do_tag(state.selected, force=True)
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
-
+        return state, True
 
 class ListUntagSelected(ListAction):
     ACTION_NAME: str = "Untag Selected"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         cli_handling.ConsumableHandler.do_untag(state.selected, force=True)
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
-
+        return state, True
 
 class ListSetConsumableSeriesSelected(ListAction):
     ACTION_NAME: str = "Set Selected Series"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        # Uninit current list
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         # Get Series
         series_list = list_handling.SeriesList(Series.find())
-        series_list.state.order_by("name")
-        actions = series_list._setup_actions(
-            series_list._add_move_actions(
-                [
-                    ListSelectEnd(-998, ["\n", "KEY_ENTER"], ["Enter"]),
-                    ListEnd(-999, ["Q"]),
-                ]
-            )
-        )
-        series_list.state.window = series_list._init_curses()
-        series_list._run(actions)
-        series_list._uninit_curses(series_list.state.window)
+        series_list.order_by("name")
+        actions = [
+            *series_list._move_actions(),
+            ListSelectEnd(-998, ["\n", "KEY_ENTER"], ["Enter"]),
+            ListEnd(-999, ["Q"])
+        ]
+        series_list.init_run(actions)
         # Assign Series
         if len(series_list.state.selected) == 1:
             selected_consumables: Sequence[Consumable] = state.selected
             selected_series: Series = series_list.state.selected.pop()
             for consumable in selected_consumables:
                 consumable.set_series(selected_series)
-        # Restore state and return
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
-
+        return state, True
 
 class ListAddConsumablePersonnelSelected(ListAction):
     ACTION_NAME: str = "Add Personnel to Selected"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        # Uninit current list
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         # Get Personnel to add
         personnel_list = list_handling.PersonnelList(Personnel.find())
-        personnel_list.state.order_by("first_name")
-        actions = personnel_list._setup_actions(
-            personnel_list._add_move_actions(
-                personnel_list._add_select_actions(
-                    [ListEnd(-9999, keys=["C"], action_name="Confirm Selection")]
-                )
-            )
-        )
-        personnel_list.state.window = personnel_list._init_curses()
-        personnel_list._run(actions)
+        personnel_list.order_by("first_name")
+        actions = [
+            *personnel_list._move_actions(),
+            *personnel_list._select_actions(),
+            ListEnd(-9999, keys=["C"], action_name="Confirm Selection")
+        ]
+        personnel_list.init_run(actions)
         selected_personnel: Sequence[Personnel] = personnel_list.state.selected
-        personnel_list._uninit_curses(personnel_list.state.window)
         # Get roles and assign
         selected_consumables: Sequence[Consumable] = state.selected
         for personnel in selected_personnel:
             personnel.role = request_input(f"role of {personnel}")
             for consumable in selected_consumables:
                 consumable.add_personnel(personnel)
-        # Restore state and return
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
-
+        return state, True
 
 # Series
 
@@ -245,8 +230,8 @@ class ListAddConsumablePersonnelSelected(ListAction):
 class ListSeriesUpdate(ListAction):
     ACTION_NAME: str = "Update Current"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         current_instance = state.instances[state.current]
         updated_instance = cli_handling.SeriesHandler.update_fields(
             [current_instance], force=True
@@ -255,15 +240,13 @@ class ListSeriesUpdate(ListAction):
         if current_instance in state.selected:
             state.selected.remove(current_instance)
             state.selected.add(updated_instance)
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
-
+        return state, True
 
 class ListSeriesDelete(ListAction):
     ACTION_NAME: str = "Delete Selected"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         if confirm_action("deletion of selected Series"):
             cli_handling.SeriesHandler.do_delete(state.selected, force=True)
         state.instances = list(
@@ -271,40 +254,28 @@ class ListSeriesDelete(ListAction):
         )
         state.selected = set()
         state.current = min(len(state.instances) - 1, state.current)
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
-
+        return state, True
 
 class ListSetSeriesConsumable(ListAction):
     ACTION_NAME: str = "Add Consumables"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        # Uninit current list
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         # Get Consumables
         consumable_list = list_handling.ConsumableList(Consumable.find())
-        consumable_list.state.order_by("name")
-        actions = consumable_list._setup_actions(
-            consumable_list._add_move_actions(
-                consumable_list._add_select_actions(
-                    [
-                        ListEnd(-999, ["C"], action_name="Confirm Selection"),
-                    ]
-                )
-            )
-        )
-        consumable_list.state.window = consumable_list._init_curses()
-        consumable_list._run(actions)
-        consumable_list._uninit_curses(consumable_list.state.window)
-        # Assign Series
+        consumable_list.order_by("name")
+        actions = [
+            *consumable_list._move_actions(),
+            *consumable_list._select_actions(),
+            ListEnd(-999, ["C"], action_name="Confirm Selection")
+        ]
+        consumable_list.init_run(actions)
         selected_consumables: Sequence[Consumable] = consumable_list.state.selected
+        # Assign Series
         selected_series: Series = state.instances[state.current]
         for consumable in selected_consumables:
             consumable.set_series(selected_series)
-        # Restore state and return
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
-
+        return state, True
 
 # Personnel
 
@@ -312,8 +283,8 @@ class ListSetSeriesConsumable(ListAction):
 class ListPersonnelUpdate(ListAction):
     ACTION_NAME: str = "Update Current"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         current_instance = state.instances[state.current]
         updated_instance = cli_handling.PersonnelHandler.update_fields(
             [current_instance], force=True
@@ -322,15 +293,13 @@ class ListPersonnelUpdate(ListAction):
         if current_instance in state.selected:
             state.selected.remove(current_instance)
             state.selected.add(updated_instance)
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
-
+        return state, True
 
 class ListPersonnelDelete(ListAction):
     ACTION_NAME: str = "Delete Selected"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         if confirm_action("deletion of selected Personnel"):
             cli_handling.PersonnelHandler.do_delete(state.selected, force=True)
         state.instances = list(
@@ -338,36 +307,27 @@ class ListPersonnelDelete(ListAction):
         )
         state.selected = set()
         state.current = min(len(state.instances) - 1, state.current)
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
-
+        return state, True
 
 class ListAddPersonnelConsumableSelected(ListAction):
     ACTION_NAME: str = "Add Selected to Consumables"
 
-    def run(self, state: list_handling.ListState) -> list_handling.ListState:
-        # Uninit current list
-        list_handling.BaseInstanceList._uninit_curses(state.window)
+    @reinit_decorator
+    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
         # Get Consumables to add
         consumable_list = list_handling.ConsumableList(Consumable.find())
         consumable_list.state.order_by("name")
-        actions = consumable_list._setup_actions(
-            consumable_list._add_move_actions(
-                consumable_list._add_select_actions(
-                    [ListEnd(-9999, keys=["C"], action_name="Confirm Selection")]
-                )
-            )
-        )
-        consumable_list.state.window = consumable_list._init_curses()
-        consumable_list._run(actions)
-        selected_personnel: Sequence[Personnel] = state.selected
-        consumable_list._uninit_curses(consumable_list.state.window)
-        # Get roles and assign
+        actions = [
+            *consumable_list._move_actions(),
+            *consumable_list._select_actions(),
+            ListEnd(-9999, keys=["C"], action_name="Confirm Selection")
+        ]
+        consumable_list.init_run(actions)
         selected_consumables: Sequence[Consumable] = consumable_list.state.selected
+        # Get roles and assign
+        selected_personnel: Sequence[Personnel] = state.selected
         for personnel in selected_personnel:
             personnel.role = request_input(f"role of {personnel}")
             for consumable in selected_consumables:
                 consumable.add_personnel(personnel)
-        # Restore state and return
-        state.window = list_handling.BaseInstanceList._init_curses()
-        return state
+        return state, True

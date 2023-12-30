@@ -15,9 +15,16 @@
 ## Next
 - [ ] Adaptive name truncation
 - [ ] Meaningful Boolean returns
+- [ ] Handle window resize curses
 - [ ] List all tags
 - [ ] Delete returns deleted records
 - [ ] Dataclasses/Attrs
 - [ ] Further Tests
 - [ ] SQL to dedicated script file that is read from
 - [ ] Turn on type-checking and fix type-hint inconsistencies
+- [ ] Use sentinels library instead of own SentinelClass implementation
+- [ ] Fix Bugs
+    - [ ] Completion doesn't set parts to max_parts
+    - [ ] Completion doesn't set start date
+    - [ ] Normalize "None" values e.g. Null, None, ?
+    - [ ] Mismatched date timezones

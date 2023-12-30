@@ -146,7 +146,7 @@ class ConsumableHandler(CLIHandler):
             if static:
                 return consumable_list.tabulate() + f"\n{results} Result(s)..."
             else:
-                consumable_list.run()
+                consumable_list.init_run()
                 return ""
         else:
             return "0 Results..."
@@ -599,7 +599,7 @@ class SeriesHandler(CLIHandler):
             if static:
                 return series_list.tabulate() + f"\n{results} Result(s)..."
             else:
-                series_list.run()
+                series_list.init_run()
                 return ""
         else:
             return "0 Results..."
@@ -731,7 +731,7 @@ class PersonnelHandler(CLIHandler):
             if static:
                 return personnel_list.tabulate() + f"\n{results} Result(s)..."
             else:
-                personnel_list.run()
+                personnel_list.init_run()
                 return ""
         else:
             return "0 Results..."

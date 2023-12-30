@@ -7,6 +7,7 @@ from tabulate import tabulate
 from .utils import truncate
 
 # Consumption Imports
+from .curses_handling import init_curses, uninit_curses, new_win, CursesCoords
 from consumptionbackend.Database import DatabaseEntity
 from consumptionbackend.Consumable import Consumable
 from consumptionbackend.Series import Series
@@ -19,8 +20,8 @@ class ListState:
         self.instances = instances
         self.selected = set()
         self.current = 0
-        self.active = True
         self.window = None
+        self.coords = CursesCoords()
 
     def order_by(self, key: str, reverse: bool = False) -> None:
         # Thanks to Andrew Clark for solution to sorting list with NoneTypes https://stackoverflow.com/a/18411610
@@ -36,55 +37,33 @@ class BaseInstanceList(ABC):
         self.state = ListState(instances)
 
     @abstractmethod
-    def run(self) -> None:
-        pass
-
-    @abstractmethod
     def tabulate(self) -> str:
         pass
 
-    @classmethod
-    def _init_curses(self):
-        window = curses.initscr()
-        curses.noecho()
-        curses.cbreak()
-        curses.curs_set(False)
-        window.keypad(True)
-        return window
+    def init_run(self, actions : Sequence[list_actions.ListAction], coords : CursesCoords = None) -> None:
+        init_curses()
+        self.run(actions, coords)
+        uninit_curses()
 
-    @classmethod
-    def _uninit_curses(self, window):
-        curses.echo()
-        curses.nocbreak()
-        curses.curs_set(True)
-        window.keypad(False)
-        curses.endwin()
-
-    def _init_run(self, actions: Sequence[list_actions.ListAction]) -> None:
+    def run(self, actions: Sequence[list_actions.ListAction], coords : CursesCoords = None) -> None:
         # Setup State
-        actions.append(list_actions.ListEnd(-9999, ["Q"]))
-        actions = BaseInstanceList._setup_actions(
-            BaseInstanceList._add_move_actions(
-                BaseInstanceList._add_select_actions(actions)
-            )
-        )
-        self.state.window = BaseInstanceList._init_curses()
+        self.state.coords = coords if coords is not None else CursesCoords()
+        self.state.window = new_win(self.state.coords)
+        actions = BaseInstanceList._setup_actions(actions)
         # Render/Action Loop
-        self._run(actions)
-        # Reset State
-        BaseInstanceList._uninit_curses(self.state.window)
+        self._handle(actions)
 
-    def _run(self, actions: Sequence[list_actions.ListAction]) -> None:
-        while self.state.active:
+    def _handle(self, actions: Sequence[list_actions.ListAction]) -> None:
+        cont = True
+        while cont:
             # Render
             self._render(self.tabulate(), actions)
             # Action
             key = self.state.window.getkey().upper()
             for action in actions:
-                for action_key in action.keys:
-                    if key == action_key:
-                        self.state = action.run(self.state)
-
+                if key in action.keys:
+                    self.state, cont = action.run(self.state)
+    
     def _render(self, table: str, actions: Sequence[list_actions.ListAction]) -> None:
         self.state.window.erase()
         # Render Actions
@@ -94,7 +73,7 @@ class BaseInstanceList(ABC):
                 for action in actions
             ]
         )
-        action_y = curses.LINES - 1 - (len(action_string) // curses.COLS)
+        action_y = self.state.coords.y_max - 1 - (len(action_string) // self.state.coords.x_max)
         self.state.window.addstr(action_y, 0, action_string)
         # Render Table
         table = table.split("\n")
@@ -127,20 +106,30 @@ class BaseInstanceList(ABC):
         self.state.window.refresh()
 
     @classmethod
-    def _add_select_actions(
-        cls, actions: Sequence[list_actions.ListAction]
+    def _select_actions(
+        cls
     ) -> Sequence[list_actions.ListAction]:
-        actions.append(list_actions.ListSelect(9997, ["\n", "KEY_ENTER"], ["Enter"]))
-        actions.append(list_actions.ListDeselectAll(9996, ["A"]))
-        return actions
+        return [
+            list_actions.ListSelect(9997, ["\n", "KEY_ENTER"], ["Enter"]),
+            list_actions.ListDeselectAll(9996, ["A"])
+        ]
 
     @classmethod
-    def _add_move_actions(
-        cls, actions: Sequence[list_actions.ListAction]
+    def _move_actions(
+        cls
     ) -> Sequence[list_actions.ListAction]:
-        actions.append(list_actions.ListUp(9999, ["K", "KEY_UP"], ["K", "↑"]))
-        actions.append(list_actions.ListDown(9998, ["J", "KEY_DOWN"], ["J", "↓"]))
-        return actions
+        return [
+            list_actions.ListUp(9999, ["K", "KEY_UP"], ["K", "↑"]),
+            list_actions.ListDown(9998, ["J", "KEY_DOWN"], ["J", "↓"])
+        ]
+    
+    @classmethod
+    def _default_actions(cls):
+        return [
+            list_actions.ListEnd(-9999, ["Q"]),
+            *BaseInstanceList._move_actions(),
+            *BaseInstanceList._select_actions()
+        ]
 
     @classmethod
     def _setup_actions(
@@ -160,21 +149,20 @@ class ConsumableList(BaseInstanceList):
         super().__init__(instances)
         self.date_format = date_format
 
-    def run(self) -> None:
-        actions = []
-        actions.append(list_actions.ListConsumableUpdate(999, ["U"]))
-        actions.append(list_actions.ListConsumableDelete(998, ["D"]))
-        actions.append(
-            list_actions.ListIncrementCurrentRating(997, ["L", "KEY_RIGHT"], ["L", "→"])
-        )
-        actions.append(
-            list_actions.ListDecrementCurrentRating(997, ["H", "KEY_LEFT"], ["H", "←"])
-        )
-        actions.append(list_actions.ListTagSelected(995, ["T"]))
-        actions.append(list_actions.ListUntagSelected(994, ["G"]))
-        actions.append(list_actions.ListSetConsumableSeriesSelected(993, ["S"]))
-        actions.append(list_actions.ListAddConsumablePersonnelSelected(992, ["P"]))
-        super()._init_run(actions)
+    def init_run(self, actions : Sequence[list_actions.ListAction] = None, coords : CursesCoords = None) -> None:
+        if actions is None:
+            actions = [
+                *BaseInstanceList._default_actions(),
+                list_actions.ListConsumableUpdate(999, ["U"]),
+                list_actions.ListConsumableDelete(998, ["D"]),
+                list_actions.ListIncrementCurrentRating(997, ["L", "KEY_RIGHT"], ["L", "→"]),
+                list_actions.ListDecrementCurrentRating(997, ["H", "KEY_LEFT"], ["H", "←"]),
+                list_actions.ListTagSelected(995, ["T"]),
+                list_actions.ListUntagSelected(994, ["G"]),
+                list_actions.ListSetConsumableSeriesSelected(993, ["S"]),
+                list_actions.ListAddConsumablePersonnelSelected(992, ["P"]),
+            ]
+        super().init_run(actions, coords)
 
     def tabulate(self) -> str:
         instances: Sequence[Consumable] = self.state.instances
@@ -218,12 +206,15 @@ class SeriesList(BaseInstanceList):
     def __init__(self, instances: Sequence[Series]) -> None:
         super().__init__(instances)
 
-    def run(self) -> None:
-        actions = []
-        actions.append(list_actions.ListSeriesUpdate(999, ["U"]))
-        actions.append(list_actions.ListSeriesDelete(998, ["D"]))
-        actions.append(list_actions.ListSetSeriesConsumable(997, ["C"]))
-        super()._init_run(actions)
+    def init_run(self, actions : Sequence[list_actions.ListAction] = None, coords : CursesCoords = None) -> None:
+        if actions is None:
+            actions = [
+                *BaseInstanceList._default_actions(),
+                list_actions.ListSeriesUpdate(999, ["U"]),
+                list_actions.ListSeriesDelete(998, ["D"]),
+                list_actions.ListSetSeriesConsumable(997, ["C"])
+            ]
+        super().init_run(actions, coords)
 
     def tabulate(self) -> str:
         instances: Sequence[Series] = self.state.instances
@@ -235,12 +226,15 @@ class PersonnelList(BaseInstanceList):
     def __init__(self, instances: Sequence[Personnel]) -> None:
         super().__init__(instances)
 
-    def run(self) -> None:
-        actions = []
-        actions.append(list_actions.ListPersonnelUpdate(999, ["U"]))
-        actions.append(list_actions.ListPersonnelDelete(998, ["D"]))
-        actions.append(list_actions.ListAddPersonnelConsumableSelected(997, ["C"]))
-        super()._init_run(actions)
+    def init_run(self, actions : Sequence[list_actions.ListAction] = None, coords : CursesCoords = None) -> None:
+        if actions is None:
+            actions = [
+                *BaseInstanceList._default_actions(),
+                list_actions.ListPersonnelUpdate(999, ["U"]),
+                list_actions.ListPersonnelDelete(998, ["D"]),
+                list_actions.ListAddPersonnelConsumableSelected(997, ["C"])
+            ]
+        super().init_run(actions, coords)
 
     def tabulate(self) -> str:
         instances: Sequence[Personnel] = self.state.instances
