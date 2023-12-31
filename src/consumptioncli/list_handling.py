@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Tuple
+from itertools import count
 import curses
 from collections.abc import Sequence
 from tabulate import tabulate
@@ -74,58 +75,69 @@ class BaseInstanceList(ABC):
                 if key in action.keys:
                     self.state, cont = action.run(self.state)
 
+    @classmethod
+    def _action_str(cls, actions: Sequence[list_actions.ListAction]) -> str:
+        return "   ".join(
+            [
+                f"[{'/'.join(action.key_aliases)}] {action.ACTION_NAME}"
+                for action in actions
+            ]
+        )
+
     def _render(
         self,
         headers: Sequence[str],
         body: Sequence[str],
         actions: Sequence[list_actions.ListAction],
     ) -> None:
-        self.state.window.erase()
+        window = self.state.window
+        x_max, y_max = self.state.coords.x_max, self.state.coords.y_max
+        window.erase()
+
         # Render Actions
-        action_string = "   ".join(
-            [
-                f"[{'/'.join(action.key_aliases)}] {action.ACTION_NAME}"
-                for action in actions
-            ]
-        )
-        action_y = (
-            self.state.coords.y_max
-            - 1
-            - (len(action_string) // self.state.coords.x_max)
-        )
-        self.state.window.addstr(action_y, 0, action_string)
+        action_string = BaseInstanceList._action_str(actions)
+        action_lines = len(action_string) // x_max
+        action_y = y_max - 1 - action_lines
+        window.addstr(action_y, 0, action_string)
+
         # Render Table
+        header_lines = 0
+        INDENT = 2
         ## Header
-        self.state.window.addstr(
-            0, 2, truncate(headers[0], self.state.coords.x_max - 2), curses.A_BOLD
-        )
-        self.state.window.addstr(
-            1, 2, truncate(headers[1], self.state.coords.x_max - 2), curses.A_BOLD
-        )
+        for header_line in headers:
+            window.addstr(
+                header_lines,
+                INDENT,
+                truncate(header_line, x_max - INDENT),
+                curses.A_BOLD,
+            )
+            header_lines += 1
+
         ## Body
-        lines_before_after = action_y - 4
-        start_index = max(0, self.state.current - (lines_before_after // 2))
-        difference = start_index - (self.state.current - (lines_before_after // 2))
-        end_index = min(
-            len(self.state.instances) - 1,
-            self.state.current + (lines_before_after // 2) + difference,
-        )
-        displayed = body[start_index : end_index + 1]
-        for i, line in enumerate(displayed):
-            true_i = i + start_index
-            y_pos = i + 2
-            attr = (
+        remaining_lines = y_max - header_lines - action_lines - 2
+        start_index = max(0, self.state.current - (remaining_lines // 2))
+        for i, y_pos in zip(
+            range(start_index, start_index + remaining_lines), count(header_lines)
+        ):
+            line = body[i]
+            style = (
                 curses.A_STANDOUT
-                if self.state.instances[true_i] in self.state.selected
+                if self.state.instances[i] in self.state.selected
                 else curses.A_NORMAL
             )
-            if true_i == self.state.current:
+            if i == self.state.current:
                 self.state.window.addstr(
-                    y_pos, 0, f"> {truncate(line, self.state.coords.x_max - 4)} <", attr
+                    y_pos,
+                    0,
+                    f"> {truncate(line, self.state.coords.x_max - 2*INDENT)} <",
+                    style,
                 )
             else:
                 self.state.window.addstr(
-                    y_pos, 2, truncate(line, self.state.coords.x_max - 2), attr
+                    y_pos,
+                    INDENT,
+                    truncate(line, self.state.coords.x_max - INDENT),
+                    style,
                 )
         self.state.window.refresh()
 
@@ -281,3 +293,11 @@ class PersonnelList(BaseInstanceList):
         return tabulate(
             table_instances, headers=["#", "ID", "First Name", "Pseudonym", "Last Name"]
         )
+
+
+class MiniInstanceList(BaseInstanceList):
+    def tabulate_str(self) -> str:
+        return "\n".join(map(str, self.state.instances))
+
+    def tabulate(self) -> Tuple[Sequence[str], Sequence[str]]:
+        return ([], [str(c for c in self.state.instances)])
