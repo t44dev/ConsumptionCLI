@@ -80,8 +80,8 @@ class BaseInstanceList(ABC):
         headers = table[:2]
         body = table[2:]
         # Header
-        self.state.window.addstr(0, 2, headers[0], curses.A_BOLD)
-        self.state.window.addstr(1, 2, headers[1], curses.A_BOLD)
+        self.state.window.addstr(0, 2, truncate(headers[0], self.state.coords.x_max - 2), curses.A_BOLD)
+        self.state.window.addstr(1, 2, truncate(headers[1], self.state.coords.x_max - 2), curses.A_BOLD)
         # Body
         lines_before_after = action_y - 4
         start_index = max(0, self.state.current - (lines_before_after // 2))
@@ -100,9 +100,9 @@ class BaseInstanceList(ABC):
                 else curses.A_NORMAL
             )
             if true_i == self.state.current:
-                self.state.window.addstr(y_pos, 0, f"> {line} <", attr)
+                self.state.window.addstr(y_pos, 0, f"> {truncate(line, self.state.coords.x_max - 4)} <", attr)
             else:
-                self.state.window.addstr(y_pos, 2, line, attr)
+                self.state.window.addstr(y_pos, 2, truncate(line, self.state.coords.x_max - 2), attr)
         self.state.window.refresh()
 
     @classmethod
