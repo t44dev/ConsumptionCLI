@@ -128,7 +128,7 @@ class ConsumableHandler(CLIHandler):
         cls._prepare_args(args, new)
         consumable = Consumable.new(**vars(new))
         # Create String
-        return ConsumableList([consumable], getattr(args, "date_format")).tabulate()
+        return ConsumableList([consumable], getattr(args, "date_format")).tabulate_str()
 
     @classmethod
     def cli_list(cls, args: Namespace) -> str:
@@ -144,7 +144,7 @@ class ConsumableHandler(CLIHandler):
             consumable_list = ConsumableList(consumables, getattr(args, "date_format"))
             consumable_list.order_by(getattr(args, "order"), getattr(args, "reverse"))
             if static:
-                return consumable_list.tabulate() + f"\n{results} Result(s)..."
+                return consumable_list.tabulate_str() + f"\n{results} Result(s)..."
             else:
                 consumable_list.init_run()
                 return ""
@@ -174,7 +174,7 @@ class ConsumableHandler(CLIHandler):
         if len(updated_consumables) > 0:
             return ConsumableList(
                 updated_consumables, getattr(args, "date_format")
-            ).tabulate()
+            ).tabulate_str()
         else:
             return "No Consumable(s) updated."
 
@@ -583,7 +583,7 @@ class SeriesHandler(CLIHandler):
         # Create
         series = Series.new(**vars(new))
         # Create String
-        return SeriesList([series]).tabulate()
+        return SeriesList([series]).tabulate_str()
 
     @classmethod
     def cli_list(cls, args: Namespace) -> str:
@@ -597,7 +597,7 @@ class SeriesHandler(CLIHandler):
             series_list = SeriesList(series)
             series_list.order_by(getattr(args, "order"), getattr(args, "reverse"))
             if static:
-                return series_list.tabulate() + f"\n{results} Result(s)..."
+                return series_list.tabulate_str() + f"\n{results} Result(s)..."
             else:
                 series_list.init_run()
                 return ""
@@ -622,7 +622,7 @@ class SeriesHandler(CLIHandler):
         updated_series = cls.do_update(series, vars(set_mapping), force)
         # Create String
         if len(updated_series) > 0:
-            return SeriesList(updated_series).tabulate()
+            return SeriesList(updated_series).tabulate_str()
         else:
             return "No Series updated."
 
@@ -715,7 +715,7 @@ class PersonnelHandler(CLIHandler):
         # Create
         personnel = Personnel.new(**vars(new))
         # Create String
-        return PersonnelList([personnel]).tabulate()
+        return PersonnelList([personnel]).tabulate_str()
 
     @classmethod
     def cli_list(cls, args: Namespace) -> str:
@@ -729,7 +729,7 @@ class PersonnelHandler(CLIHandler):
             personnel_list = PersonnelList(personnel)
             personnel_list.order_by(getattr(args, "order"), getattr(args, "reverse"))
             if static:
-                return personnel_list.tabulate() + f"\n{results} Result(s)..."
+                return personnel_list.tabulate_str() + f"\n{results} Result(s)..."
             else:
                 personnel_list.init_run()
                 return ""
@@ -754,7 +754,7 @@ class PersonnelHandler(CLIHandler):
         updated_personnel = cls.do_update(personnel, vars(set_mapping), force)
         # Create String
         if len(updated_personnel) > 0:
-            return PersonnelList(updated_personnel).tabulate()
+            return PersonnelList(updated_personnel).tabulate_str()
         else:
             return "No Personnel updated."
 

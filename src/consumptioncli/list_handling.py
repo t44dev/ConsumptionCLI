@@ -1,6 +1,7 @@
 # General Imports
 from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import Tuple
 import curses
 from collections.abc import Sequence
 from tabulate import tabulate
@@ -37,8 +38,12 @@ class BaseInstanceList(ABC):
         self.state = ListState(instances)
 
     @abstractmethod
-    def tabulate(self) -> str:
+    def tabulate_str(self) -> str:
         pass
+
+    def tabulate(self) -> Tuple[Sequence[str], Sequence[str]]:
+        table = self.tabulate_str().split("\n")
+        return (table[:2], table[2:])
 
     def init_run(
         self, actions: Sequence[list_actions.ListAction], coords: CursesCoords = None
@@ -61,14 +66,20 @@ class BaseInstanceList(ABC):
         cont = True
         while cont:
             # Render
-            self._render(self.tabulate(), actions)
+            headers, body = self.tabulate()
+            self._render(headers, body, actions)
             # Action
             key = self.state.window.getkey().upper()
             for action in actions:
                 if key in action.keys:
                     self.state, cont = action.run(self.state)
 
-    def _render(self, table: str, actions: Sequence[list_actions.ListAction]) -> None:
+    def _render(
+        self,
+        headers: Sequence[str],
+        body: Sequence[str],
+        actions: Sequence[list_actions.ListAction],
+    ) -> None:
         self.state.window.erase()
         # Render Actions
         action_string = "   ".join(
@@ -84,17 +95,14 @@ class BaseInstanceList(ABC):
         )
         self.state.window.addstr(action_y, 0, action_string)
         # Render Table
-        table = table.split("\n")
-        headers = table[:2]
-        body = table[2:]
-        # Header
+        ## Header
         self.state.window.addstr(
             0, 2, truncate(headers[0], self.state.coords.x_max - 2), curses.A_BOLD
         )
         self.state.window.addstr(
             1, 2, truncate(headers[1], self.state.coords.x_max - 2), curses.A_BOLD
         )
-        # Body
+        ## Body
         lines_before_after = action_y - 4
         start_index = max(0, self.state.current - (lines_before_after // 2))
         difference = start_index - (self.state.current - (lines_before_after // 2))
@@ -184,7 +192,7 @@ class ConsumableList(BaseInstanceList):
             ]
         super().init_run(actions, coords)
 
-    def tabulate(self) -> str:
+    def tabulate_str(self) -> str:
         instances: Sequence[Consumable] = self.state.instances
         table_instances = [
             [
@@ -240,7 +248,7 @@ class SeriesList(BaseInstanceList):
             ]
         super().init_run(actions, coords)
 
-    def tabulate(self) -> str:
+    def tabulate_str(self) -> str:
         instances: Sequence[Series] = self.state.instances
         table_instances = [[row + 1, i.id, i.name] for row, i in enumerate(instances)]
         return tabulate(table_instances, headers=["#", "ID", "Name"])
@@ -264,7 +272,7 @@ class PersonnelList(BaseInstanceList):
             ]
         super().init_run(actions, coords)
 
-    def tabulate(self) -> str:
+    def tabulate_str(self) -> str:
         instances: Sequence[Personnel] = self.state.instances
         table_instances = [
             [row + 1, i.id, i.first_name, i.pseudonym, i.last_name]
