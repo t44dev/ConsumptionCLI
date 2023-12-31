@@ -15,14 +15,16 @@ from . import cli_handling
 from .utils import confirm_action, request_input
 from .curses_handling import init_curses, uninit_curses
 
+
 def reinit_decorator(f):
     def wrapper(*args, **kwargs):
         uninit_curses()
         result = f(*args, **kwargs)
         init_curses()
         return result
-    
+
     return wrapper
+
 
 # General Actions
 
@@ -38,14 +40,18 @@ class ListAction(ABC):
         self.key_aliases = self.keys if key_alises is None else key_alises
 
     @abstractmethod
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         pass
 
 
 class ListUp(ListAction):
     ACTION_NAME: str = "Up"
 
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         state.current = max(state.current - 1, 0)
         return state, True
 
@@ -53,7 +59,9 @@ class ListUp(ListAction):
 class ListDown(ListAction):
     ACTION_NAME: str = "Down"
 
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         state.current = min(state.current + 1, len(state.instances) - 1)
         return state, True
 
@@ -70,14 +78,18 @@ class ListEnd(ListAction):
         super().__init__(priority, keys, key_alises)
         self.ACTION_NAME = action_name
 
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         return state, False
 
 
 class ListSelect(ListAction):
     ACTION_NAME: str = "Select"
 
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         if state.instances[state.current] in state.selected:
             state.selected.remove(state.instances[state.current])
         else:
@@ -88,16 +100,20 @@ class ListSelect(ListAction):
 class ListSelectEnd(ListSelect):
     ACTION_NAME: str = "Select and Confirm"
 
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         return super().run(state)[0], False
 
 
 class ListDeselectAll(ListAction):
     ACTION_NAME: str = "Deselect All"
 
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         state.selected = set()
-        return state, True 
+        return state, True
 
 
 # Consumable Actions
@@ -107,7 +123,9 @@ class ListConsumableUpdate(ListAction):
     ACTION_NAME: str = "Update Selected"
 
     @reinit_decorator
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         updates = cli_handling.ConsumableHandler.update_fields(
             state.selected, force=True
         )
@@ -124,7 +142,9 @@ class ListConsumableDelete(ListAction):
     ACTION_NAME: str = "Delete Selected"
 
     @reinit_decorator
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         if confirm_action("deletion of selected Consumable(s)"):
             cli_handling.ConsumableHandler.do_delete(state.selected, force=True)
         state.instances = list(
@@ -138,7 +158,9 @@ class ListConsumableDelete(ListAction):
 class ListIncrementCurrentRating(ListAction):
     ACTION_NAME: str = "Increment Rating"
 
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         cons: Consumable = state.instances[state.current]
         new_rating = 0.1 if cons.rating is None else min(10, cons.rating + 0.1)
         if new_rating != cons.rating:
@@ -150,7 +172,9 @@ class ListIncrementCurrentRating(ListAction):
 class ListDecrementCurrentRating(ListAction):
     ACTION_NAME: str = "Decrement Rating"
 
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         cons: Consumable = state.instances[state.current]
         new_rating = (
             None
@@ -166,31 +190,39 @@ class ListDecrementCurrentRating(ListAction):
 class ListTagSelected(ListAction):
     ACTION_NAME: str = "Tag Selected"
 
-    @reinit_decorator 
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    @reinit_decorator
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         cli_handling.ConsumableHandler.do_tag(state.selected, force=True)
         return state, True
+
 
 class ListUntagSelected(ListAction):
     ACTION_NAME: str = "Untag Selected"
 
     @reinit_decorator
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         cli_handling.ConsumableHandler.do_untag(state.selected, force=True)
         return state, True
+
 
 class ListSetConsumableSeriesSelected(ListAction):
     ACTION_NAME: str = "Set Selected Series"
 
     @reinit_decorator
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         # Get Series
         series_list = list_handling.SeriesList(Series.find())
         series_list.order_by("name")
         actions = [
             *series_list._move_actions(),
             ListSelectEnd(-998, ["\n", "KEY_ENTER"], ["Enter"]),
-            ListEnd(-999, ["Q"])
+            ListEnd(-999, ["Q"]),
         ]
         series_list.init_run(actions)
         # Assign Series
@@ -201,18 +233,21 @@ class ListSetConsumableSeriesSelected(ListAction):
                 consumable.set_series(selected_series)
         return state, True
 
+
 class ListAddConsumablePersonnelSelected(ListAction):
     ACTION_NAME: str = "Add Personnel to Selected"
 
     @reinit_decorator
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         # Get Personnel to add
         personnel_list = list_handling.PersonnelList(Personnel.find())
         personnel_list.order_by("first_name")
         actions = [
             *personnel_list._move_actions(),
             *personnel_list._select_actions(),
-            ListEnd(-9999, keys=["C"], action_name="Confirm Selection")
+            ListEnd(-9999, keys=["C"], action_name="Confirm Selection"),
         ]
         personnel_list.init_run(actions)
         selected_personnel: Sequence[Personnel] = personnel_list.state.selected
@@ -224,6 +259,7 @@ class ListAddConsumablePersonnelSelected(ListAction):
                 consumable.add_personnel(personnel)
         return state, True
 
+
 # Series
 
 
@@ -231,7 +267,9 @@ class ListSeriesUpdate(ListAction):
     ACTION_NAME: str = "Update Current"
 
     @reinit_decorator
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         current_instance = state.instances[state.current]
         updated_instance = cli_handling.SeriesHandler.update_fields(
             [current_instance], force=True
@@ -242,11 +280,14 @@ class ListSeriesUpdate(ListAction):
             state.selected.add(updated_instance)
         return state, True
 
+
 class ListSeriesDelete(ListAction):
     ACTION_NAME: str = "Delete Selected"
 
     @reinit_decorator
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         if confirm_action("deletion of selected Series"):
             cli_handling.SeriesHandler.do_delete(state.selected, force=True)
         state.instances = list(
@@ -256,18 +297,21 @@ class ListSeriesDelete(ListAction):
         state.current = min(len(state.instances) - 1, state.current)
         return state, True
 
+
 class ListSetSeriesConsumable(ListAction):
     ACTION_NAME: str = "Add Consumables"
 
     @reinit_decorator
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         # Get Consumables
         consumable_list = list_handling.ConsumableList(Consumable.find())
         consumable_list.order_by("name")
         actions = [
             *consumable_list._move_actions(),
             *consumable_list._select_actions(),
-            ListEnd(-999, ["C"], action_name="Confirm Selection")
+            ListEnd(-999, ["C"], action_name="Confirm Selection"),
         ]
         consumable_list.init_run(actions)
         selected_consumables: Sequence[Consumable] = consumable_list.state.selected
@@ -277,6 +321,7 @@ class ListSetSeriesConsumable(ListAction):
             consumable.set_series(selected_series)
         return state, True
 
+
 # Personnel
 
 
@@ -284,7 +329,9 @@ class ListPersonnelUpdate(ListAction):
     ACTION_NAME: str = "Update Current"
 
     @reinit_decorator
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         current_instance = state.instances[state.current]
         updated_instance = cli_handling.PersonnelHandler.update_fields(
             [current_instance], force=True
@@ -295,11 +342,14 @@ class ListPersonnelUpdate(ListAction):
             state.selected.add(updated_instance)
         return state, True
 
+
 class ListPersonnelDelete(ListAction):
     ACTION_NAME: str = "Delete Selected"
 
     @reinit_decorator
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         if confirm_action("deletion of selected Personnel"):
             cli_handling.PersonnelHandler.do_delete(state.selected, force=True)
         state.instances = list(
@@ -309,18 +359,21 @@ class ListPersonnelDelete(ListAction):
         state.current = min(len(state.instances) - 1, state.current)
         return state, True
 
+
 class ListAddPersonnelConsumableSelected(ListAction):
     ACTION_NAME: str = "Add Selected to Consumables"
 
     @reinit_decorator
-    def run(self, state: list_handling.ListState) -> Tuple[list_handling.ListState, bool]:
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
         # Get Consumables to add
         consumable_list = list_handling.ConsumableList(Consumable.find())
         consumable_list.state.order_by("name")
         actions = [
             *consumable_list._move_actions(),
             *consumable_list._select_actions(),
-            ListEnd(-9999, keys=["C"], action_name="Confirm Selection")
+            ListEnd(-9999, keys=["C"], action_name="Confirm Selection"),
         ]
         consumable_list.init_run(actions)
         selected_consumables: Sequence[Consumable] = consumable_list.state.selected

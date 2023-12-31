@@ -6,6 +6,8 @@
 - [x] Log file
 - [ ] Add badges/shields to README
 - [ ] Update readme
+- [ ] Update version
+- [ ] Update the version change script
 - [x] Allow setting of NoneType for max_parts
 - [x] Tag Search should be an AND not an OR over the searched tags
 

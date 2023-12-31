@@ -40,12 +40,16 @@ class BaseInstanceList(ABC):
     def tabulate(self) -> str:
         pass
 
-    def init_run(self, actions : Sequence[list_actions.ListAction], coords : CursesCoords = None) -> None:
+    def init_run(
+        self, actions: Sequence[list_actions.ListAction], coords: CursesCoords = None
+    ) -> None:
         init_curses()
         self.run(actions, coords)
         uninit_curses()
 
-    def run(self, actions: Sequence[list_actions.ListAction], coords : CursesCoords = None) -> None:
+    def run(
+        self, actions: Sequence[list_actions.ListAction], coords: CursesCoords = None
+    ) -> None:
         # Setup State
         self.state.coords = coords if coords is not None else CursesCoords()
         self.state.window = new_win(self.state.coords)
@@ -63,7 +67,7 @@ class BaseInstanceList(ABC):
             for action in actions:
                 if key in action.keys:
                     self.state, cont = action.run(self.state)
-    
+
     def _render(self, table: str, actions: Sequence[list_actions.ListAction]) -> None:
         self.state.window.erase()
         # Render Actions
@@ -73,15 +77,23 @@ class BaseInstanceList(ABC):
                 for action in actions
             ]
         )
-        action_y = self.state.coords.y_max - 1 - (len(action_string) // self.state.coords.x_max)
+        action_y = (
+            self.state.coords.y_max
+            - 1
+            - (len(action_string) // self.state.coords.x_max)
+        )
         self.state.window.addstr(action_y, 0, action_string)
         # Render Table
         table = table.split("\n")
         headers = table[:2]
         body = table[2:]
         # Header
-        self.state.window.addstr(0, 2, truncate(headers[0], self.state.coords.x_max - 2), curses.A_BOLD)
-        self.state.window.addstr(1, 2, truncate(headers[1], self.state.coords.x_max - 2), curses.A_BOLD)
+        self.state.window.addstr(
+            0, 2, truncate(headers[0], self.state.coords.x_max - 2), curses.A_BOLD
+        )
+        self.state.window.addstr(
+            1, 2, truncate(headers[1], self.state.coords.x_max - 2), curses.A_BOLD
+        )
         # Body
         lines_before_after = action_y - 4
         start_index = max(0, self.state.current - (lines_before_after // 2))
@@ -100,35 +112,35 @@ class BaseInstanceList(ABC):
                 else curses.A_NORMAL
             )
             if true_i == self.state.current:
-                self.state.window.addstr(y_pos, 0, f"> {truncate(line, self.state.coords.x_max - 4)} <", attr)
+                self.state.window.addstr(
+                    y_pos, 0, f"> {truncate(line, self.state.coords.x_max - 4)} <", attr
+                )
             else:
-                self.state.window.addstr(y_pos, 2, truncate(line, self.state.coords.x_max - 2), attr)
+                self.state.window.addstr(
+                    y_pos, 2, truncate(line, self.state.coords.x_max - 2), attr
+                )
         self.state.window.refresh()
 
     @classmethod
-    def _select_actions(
-        cls
-    ) -> Sequence[list_actions.ListAction]:
+    def _select_actions(cls) -> Sequence[list_actions.ListAction]:
         return [
             list_actions.ListSelect(9997, ["\n", "KEY_ENTER"], ["Enter"]),
-            list_actions.ListDeselectAll(9996, ["A"])
+            list_actions.ListDeselectAll(9996, ["A"]),
         ]
 
     @classmethod
-    def _move_actions(
-        cls
-    ) -> Sequence[list_actions.ListAction]:
+    def _move_actions(cls) -> Sequence[list_actions.ListAction]:
         return [
             list_actions.ListUp(9999, ["K", "KEY_UP"], ["K", "↑"]),
-            list_actions.ListDown(9998, ["J", "KEY_DOWN"], ["J", "↓"])
+            list_actions.ListDown(9998, ["J", "KEY_DOWN"], ["J", "↓"]),
         ]
-    
+
     @classmethod
     def _default_actions(cls):
         return [
             list_actions.ListEnd(-9999, ["Q"]),
             *BaseInstanceList._move_actions(),
-            *BaseInstanceList._select_actions()
+            *BaseInstanceList._select_actions(),
         ]
 
     @classmethod
@@ -149,14 +161,22 @@ class ConsumableList(BaseInstanceList):
         super().__init__(instances)
         self.date_format = date_format
 
-    def init_run(self, actions : Sequence[list_actions.ListAction] = None, coords : CursesCoords = None) -> None:
+    def init_run(
+        self,
+        actions: Sequence[list_actions.ListAction] = None,
+        coords: CursesCoords = None,
+    ) -> None:
         if actions is None:
             actions = [
                 *BaseInstanceList._default_actions(),
                 list_actions.ListConsumableUpdate(999, ["U"]),
                 list_actions.ListConsumableDelete(998, ["D"]),
-                list_actions.ListIncrementCurrentRating(997, ["L", "KEY_RIGHT"], ["L", "→"]),
-                list_actions.ListDecrementCurrentRating(997, ["H", "KEY_LEFT"], ["H", "←"]),
+                list_actions.ListIncrementCurrentRating(
+                    997, ["L", "KEY_RIGHT"], ["L", "→"]
+                ),
+                list_actions.ListDecrementCurrentRating(
+                    997, ["H", "KEY_LEFT"], ["H", "←"]
+                ),
                 list_actions.ListTagSelected(995, ["T"]),
                 list_actions.ListUntagSelected(994, ["G"]),
                 list_actions.ListSetConsumableSeriesSelected(993, ["S"]),
@@ -206,13 +226,17 @@ class SeriesList(BaseInstanceList):
     def __init__(self, instances: Sequence[Series]) -> None:
         super().__init__(instances)
 
-    def init_run(self, actions : Sequence[list_actions.ListAction] = None, coords : CursesCoords = None) -> None:
+    def init_run(
+        self,
+        actions: Sequence[list_actions.ListAction] = None,
+        coords: CursesCoords = None,
+    ) -> None:
         if actions is None:
             actions = [
                 *BaseInstanceList._default_actions(),
                 list_actions.ListSeriesUpdate(999, ["U"]),
                 list_actions.ListSeriesDelete(998, ["D"]),
-                list_actions.ListSetSeriesConsumable(997, ["C"])
+                list_actions.ListSetSeriesConsumable(997, ["C"]),
             ]
         super().init_run(actions, coords)
 
@@ -226,13 +250,17 @@ class PersonnelList(BaseInstanceList):
     def __init__(self, instances: Sequence[Personnel]) -> None:
         super().__init__(instances)
 
-    def init_run(self, actions : Sequence[list_actions.ListAction] = None, coords : CursesCoords = None) -> None:
+    def init_run(
+        self,
+        actions: Sequence[list_actions.ListAction] = None,
+        coords: CursesCoords = None,
+    ) -> None:
         if actions is None:
             actions = [
                 *BaseInstanceList._default_actions(),
                 list_actions.ListPersonnelUpdate(999, ["U"]),
                 list_actions.ListPersonnelDelete(998, ["D"]),
-                list_actions.ListAddPersonnelConsumableSelected(997, ["C"])
+                list_actions.ListAddPersonnelConsumableSelected(997, ["C"]),
             ]
         super().init_run(actions, coords)
 

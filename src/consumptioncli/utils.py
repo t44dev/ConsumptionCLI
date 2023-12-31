@@ -55,6 +55,6 @@ def confirm_action(action: str) -> bool:
 def truncate(string: str, amount: int = 20) -> str:
     if len(string) > amount:
         diff = min(3, len(string) - amount)
-        return string[0:amount-diff] + "." * diff
+        return string[0 : amount - diff] + "." * diff
     else:
         return string
