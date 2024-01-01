@@ -5,6 +5,7 @@ from typing import Tuple
 from itertools import count
 import curses
 from collections.abc import Sequence
+from consumptioncli.list_actions import ListAction
 from tabulate import tabulate
 from .utils import truncate
 
@@ -35,6 +36,8 @@ class ListState:
 
 
 class BaseInstanceList(ABC):
+    LIST_TITLE: str = "List"
+
     def __init__(self, instances: Sequence[DatabaseEntity]) -> None:
         self.state = ListState(instances)
 
@@ -76,13 +79,38 @@ class BaseInstanceList(ABC):
                     self.state, cont = action.run(self.state)
 
     @classmethod
+    def _action_strs(cls, actions: Sequence[list_actions.ListAction]) -> Sequence[str]:
+        return [
+            f"[{'/'.join(action.key_aliases)}] {action.ACTION_NAME}"
+            for action in actions
+        ]
+
+    @classmethod
     def _action_str(cls, actions: Sequence[list_actions.ListAction]) -> str:
-        return "   ".join(
-            [
-                f"[{'/'.join(action.key_aliases)}] {action.ACTION_NAME}"
-                for action in actions
-            ]
-        )
+        return "   ".join(cls._action_strs(actions))
+
+    @classmethod
+    def _grouped_action_strs(
+        cls, actions: Sequence[list_actions.ListAction], width: int, spacing: int = 3
+    ) -> Sequence[Sequence[str]]:
+        action_strs = cls._action_strs(actions)
+        if len(action_strs) == 0:
+            return [[]]
+
+        current_group = 0
+        groups = [[action_strs.pop(0)]]
+        for action_str in action_strs:
+            new_length = (
+                sum(map(len, groups[current_group]))
+                + len(action_str)
+                + spacing * len(groups[current_group])
+            )
+            if new_length <= width:
+                groups[current_group].append(action_str)
+            else:
+                groups.append([action_str])
+                current_group += 1
+        return groups
 
     def _render(
         self,
@@ -91,55 +119,71 @@ class BaseInstanceList(ABC):
         actions: Sequence[list_actions.ListAction],
     ) -> None:
         window = self.state.window
-        x_max, y_max = self.state.coords.x_max, self.state.coords.y_max
+        instances = self.state.instances
+        selected = self.state.selected
+        current_index = self.state.current
         window.erase()
 
+        # Title and border
+        window.box(0, 0)
+        window.addstr(0, 0, truncate(self.LIST_TITLE, self.state.coords.width()))
+        BORDER_SIZE = 1
+        ## Relative coordinates of inner box
+        coords = CursesCoords(
+            BORDER_SIZE,
+            BORDER_SIZE,
+            self.state.coords.width() - BORDER_SIZE,
+            self.state.coords.height() - BORDER_SIZE,
+        )
+
         # Render Actions
-        action_string = BaseInstanceList._action_str(actions)
-        action_lines = len(action_string) // x_max
-        action_y = y_max - 1 - action_lines
-        window.addstr(action_y, 0, action_string)
+        action_groups = BaseInstanceList._grouped_action_strs(actions, coords.width())
+        action_lines = len(action_groups)
+        for line_number, group in enumerate(action_groups):
+            action_y = max(coords.y_start, (coords.y_max - action_lines) + line_number)
+            if action_y < coords.y_max:
+                action_string = "   ".join(group)
+                window.addstr(action_y, coords.x_start, action_string)
+        coords.delta_y_max(-action_lines - 1)
 
         # Render Table
-        header_lines = 0
         INDENT = 2
+
         ## Header
+        header_lines = 0
         for header_line in headers:
-            window.addstr(
-                header_lines,
-                INDENT,
-                truncate(header_line, x_max - INDENT),
-                curses.A_BOLD,
-            )
-            header_lines += 1
+            if header_lines < coords.height():
+                header_y = header_lines + coords.y_start
+                window.addstr(
+                    header_y,
+                    INDENT + 1,
+                    truncate(header_line, coords.width() - INDENT),
+                    curses.A_BOLD,
+                )
+                header_lines += 1
+        coords.delta_y_start(header_lines)
 
         ## Body
-        remaining_lines = y_max - header_lines - action_lines - 2
-        start_index = max(0, self.state.current - (remaining_lines // 2))
-        for i, y_pos in zip(
-            range(start_index, start_index + remaining_lines), count(header_lines)
-        ):
+        start_index = max(0, current_index - (coords.height() // 2))
+        end_index = min(len(body), start_index + coords.height())
+        for i, y_pos in zip(range(start_index, end_index), count(coords.y_start)):
             line = body[i]
-            style = (
-                curses.A_STANDOUT
-                if self.state.instances[i] in self.state.selected
-                else curses.A_NORMAL
-            )
+            style = curses.A_STANDOUT if instances[i] in selected else curses.A_NORMAL
             if i == self.state.current:
-                self.state.window.addstr(
+                window.addstr(
                     y_pos,
-                    0,
-                    f"> {truncate(line, self.state.coords.x_max - 2*INDENT)} <",
+                    coords.x_start,
+                    f"> {truncate(line, coords.width() - 2*INDENT)} <",
                     style,
                 )
             else:
-                self.state.window.addstr(
+                window.addstr(
                     y_pos,
-                    INDENT,
-                    truncate(line, self.state.coords.x_max - INDENT),
+                    coords.x_start + INDENT,
+                    truncate(line, coords.width() - INDENT),
                     style,
                 )
-        self.state.window.refresh()
+        window.refresh()
 
     @classmethod
     def _select_actions(cls) -> Sequence[list_actions.ListAction]:
@@ -175,6 +219,8 @@ class BaseInstanceList(ABC):
 
 
 class ConsumableList(BaseInstanceList):
+    LIST_TITLE: str = "Consumable List"
+
     def __init__(
         self, instances: Sequence[Consumable], date_format: str = r"%Y/%m/%d"
     ) -> None:
@@ -189,18 +235,19 @@ class ConsumableList(BaseInstanceList):
         if actions is None:
             actions = [
                 *BaseInstanceList._default_actions(),
-                list_actions.ListConsumableUpdate(999, ["U"]),
-                list_actions.ListConsumableDelete(998, ["D"]),
+                list_actions.ListViewConsumable(999, ["V"]),
+                list_actions.ListConsumableUpdate(899, ["U"]),
+                list_actions.ListConsumableDelete(898, ["D"]),
                 list_actions.ListIncrementCurrentRating(
-                    997, ["L", "KEY_RIGHT"], ["L", "→"]
+                    799, ["L", "KEY_RIGHT"], ["L", "→"]
                 ),
                 list_actions.ListDecrementCurrentRating(
-                    997, ["H", "KEY_LEFT"], ["H", "←"]
+                    798, ["H", "KEY_LEFT"], ["H", "←"]
                 ),
-                list_actions.ListTagSelected(995, ["T"]),
-                list_actions.ListUntagSelected(994, ["G"]),
-                list_actions.ListSetConsumableSeriesSelected(993, ["S"]),
-                list_actions.ListAddConsumablePersonnelSelected(992, ["P"]),
+                list_actions.ListTagSelected(699, ["T"]),
+                list_actions.ListUntagSelected(698, ["G"]),
+                list_actions.ListSetConsumableSeriesSelected(799, ["S"]),
+                list_actions.ListAddConsumablePersonnelSelected(798, ["P"]),
             ]
         super().init_run(actions, coords)
 
@@ -243,6 +290,8 @@ class ConsumableList(BaseInstanceList):
 
 
 class SeriesList(BaseInstanceList):
+    LIST_TITLE: str = "Series List"
+
     def __init__(self, instances: Sequence[Series]) -> None:
         super().__init__(instances)
 
@@ -267,6 +316,8 @@ class SeriesList(BaseInstanceList):
 
 
 class PersonnelList(BaseInstanceList):
+    LIST_TITLE: str = "Personnel List"
+
     def __init__(self, instances: Sequence[Personnel]) -> None:
         super().__init__(instances)
 
@@ -296,8 +347,12 @@ class PersonnelList(BaseInstanceList):
 
 
 class MiniInstanceList(BaseInstanceList):
+    def __init__(self, instances: Sequence[DatabaseEntity], header="List") -> None:
+        self.LIST_TITLE = header
+        super().__init__(instances)
+
     def tabulate_str(self) -> str:
         return "\n".join(map(str, self.state.instances))
 
     def tabulate(self) -> Tuple[Sequence[str], Sequence[str]]:
-        return ([], [str(c for c in self.state.instances)])
+        return ([], [str(c) for c in self.state.instances])

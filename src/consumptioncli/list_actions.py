@@ -14,6 +14,7 @@ from . import list_handling
 from . import cli_handling
 from .utils import confirm_action, request_input
 from .curses_handling import init_curses, uninit_curses
+from . import details_handling
 
 
 def reinit_decorator(f):
@@ -260,7 +261,48 @@ class ListAddConsumablePersonnelSelected(ListAction):
         return state, True
 
 
-# Series
+class ListViewConsumable(ListAction):
+    ACTION_NAME: str = "View Info"
+
+    @reinit_decorator
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
+        details_handling.ConsumableDetailWindow(
+            state.instances[state.current]
+        ).init_run()
+        return state, True
+
+
+class ListRemoveSelectedPersonnel(ListAction):
+    ACTION_NAME: str = "Remove Selected"
+
+    def __init__(
+        self,
+        instance: Consumable,
+        priority: int,
+        keys: Sequence[str],
+        key_alises: Sequence[str] = None,
+    ) -> None:
+        self.instance = instance
+        super().__init__(priority, keys, key_alises)
+
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
+        for personnel in state.selected:
+            self.instance.remove_personnel(personnel)
+            for i, other_personnel in enumerate(state.instances):
+                if (
+                    personnel == other_personnel
+                    and personnel.role == other_personnel.role
+                ):
+                    state.instances.pop(i)
+        state.selected = set()
+        return state, True
+
+
+# Series Actions
 
 
 class ListSeriesUpdate(ListAction):
@@ -322,7 +364,7 @@ class ListSetSeriesConsumable(ListAction):
         return state, True
 
 
-# Personnel
+# Personnel Actions
 
 
 class ListPersonnelUpdate(ListAction):
