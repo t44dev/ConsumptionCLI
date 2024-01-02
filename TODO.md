@@ -30,3 +30,7 @@
     - [ ] Completion doesn't set start date
     - [ ] Normalize "None" values e.g. Null, None, ?
     - [ ] Mismatched date timezones
+- [ ] Add to Details Window
+    - [ ] Number of Personnel attached to Consumable
+    - [ ] Number of Consumables attached to Personnel
+    - [ ] Refresh details after list action

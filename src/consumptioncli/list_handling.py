@@ -303,9 +303,10 @@ class SeriesList(BaseInstanceList):
         if actions is None:
             actions = [
                 *BaseInstanceList._default_actions(),
-                list_actions.ListSeriesUpdate(999, ["U"]),
-                list_actions.ListSeriesDelete(998, ["D"]),
-                list_actions.ListSetSeriesConsumable(997, ["C"]),
+                list_actions.ListViewSeries(999, ["V"]),
+                list_actions.ListSeriesUpdate(899, ["U"]),
+                list_actions.ListSeriesDelete(898, ["D"]),
+                list_actions.ListSetSeriesConsumable(799, ["C"]),
             ]
         super().init_run(actions, coords)
 

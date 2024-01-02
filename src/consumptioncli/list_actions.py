@@ -373,6 +373,43 @@ class ListSetSeriesConsumable(ListAction):
             for consumable in selected_consumables:
                 consumable.set_series(selected_series)
         return state, True
+    
+class ListViewSeries(ListAction):
+    ACTION_NAME: str = "View Info"
+
+    @reinit_decorator
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
+        if len(state.instances) > 0:
+            details_handling.SeriesDetailWindow(
+                state.instances[state.current]
+            ).init_run()
+        return state, True
+
+class ListRemoveSelectedSeriesConsumable(ListAction):
+    ACTION_NAME: str = "Remove Selected"
+
+    def __init__(
+        self,
+        instance: Series,
+        priority: int,
+        keys: Sequence[str],
+        key_alises: Sequence[str] = None,
+    ) -> None:
+        self.instance = instance
+        super().__init__(priority, keys, key_alises)
+
+    def run(
+        self, state: list_handling.ListState
+    ) -> Tuple[list_handling.ListState, bool]:
+        for consumable in state.selected:
+            consumable.set_series(Series.find(id=-1))
+            state.instances.remove(consumable)
+
+        state.selected = set()
+        state.current = new_current(state)
+        return state, True
 
 
 # Personnel Actions

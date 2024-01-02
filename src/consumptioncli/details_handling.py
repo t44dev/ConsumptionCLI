@@ -8,6 +8,7 @@ from datetime import datetime
 # Consumption Imports
 from consumptionbackend.Database import DatabaseEntity
 from consumptionbackend.Consumable import Consumable
+from consumptionbackend.Series import Series
 from . import list_handling
 from . import list_actions
 from .curses_handling import init_curses, uninit_curses, new_win, CursesCoords
@@ -81,6 +82,43 @@ class ConsumableDetailWindow(BaseDetailWindow):
                 5,
                 f"{instance.status.name}{', ' + to_date(instance.start_date) + ' - ' + to_date(instance.end_date) if instance.start_date is not None or instance.end_date is not None else ''}",
             ),
+        ]
+        for y_pos, info in info_list:
+            if y_pos < coords.height():
+                window.addstr(
+                    y_pos, BORDER_SIZE, truncate(info, coords.width() - BORDER_SIZE * 2)
+                )
+
+        window.refresh()
+
+class SeriesDetailWindow(BaseDetailWindow):
+
+    def run(self) -> None:
+        instance: Series = self.instance
+        actions = [
+            *list_handling.BaseInstanceList._default_actions(),
+            list_actions.ListRemoveSelectedSeriesConsumable(self.instance, 500, ["R"])
+        ]
+        super().run(
+            list_handling.MiniInstanceList(instance.get_consumables(), "Consumables"),
+            actions,
+        )
+
+    def _render_info(self, window, coords: CursesCoords) -> None:
+        window.erase()
+
+        # Title and Border
+        window.box(0, 0)
+        window.addstr(0, 0, self.INFO_TITLE)
+        BORDER_SIZE = 1
+
+        # Add Info
+        instance: Series = self.instance
+        consumables = instance.get_consumables()
+        info_list = [
+            (1, f'#{instance.id} "{instance.name}"'),
+            (3, f"{sum([c.parts for c in consumables])}/{sum([c.max_parts for c in consumables if c.max_parts is not None])}" + ("+? parts" if None in [c.max_parts for c in consumables] else " parts") + f", {sum([c.completions for c in consumables])} Total Completions"),
+            (4, f"{instance.average_rating():.2f} Average Rating")
         ]
         for y_pos, info in info_list:
             if y_pos < coords.height():
