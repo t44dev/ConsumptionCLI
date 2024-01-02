@@ -27,6 +27,10 @@ def reinit_decorator(f):
     return wrapper
 
 
+def new_current(state: list_handling.ListState):
+    return max(0, min(state.current, len(state.instances) - 1))
+
+
 # General Actions
 
 
@@ -63,7 +67,7 @@ class ListDown(ListAction):
     def run(
         self, state: list_handling.ListState
     ) -> Tuple[list_handling.ListState, bool]:
-        state.current = min(state.current + 1, len(state.instances) - 1)
+        state.current = max(0, min(state.current + 1, len(state.instances) - 1))
         return state, True
 
 
@@ -91,10 +95,11 @@ class ListSelect(ListAction):
     def run(
         self, state: list_handling.ListState
     ) -> Tuple[list_handling.ListState, bool]:
-        if state.instances[state.current] in state.selected:
-            state.selected.remove(state.instances[state.current])
-        else:
-            state.selected.add(state.instances[state.current])
+        if len(state.instances) > 0:
+            if state.instances[state.current] in state.selected:
+                state.selected.remove(state.instances[state.current])
+            else:
+                state.selected.add(state.instances[state.current])
         return state, True
 
 
@@ -152,7 +157,7 @@ class ListConsumableDelete(ListAction):
             filter(lambda x: x not in state.selected, state.instances)
         )
         state.selected = set()
-        state.current = min(len(state.instances) - 1, state.current)
+        state.current = new_current(state)
         return state, True
 
 
@@ -162,11 +167,12 @@ class ListIncrementCurrentRating(ListAction):
     def run(
         self, state: list_handling.ListState
     ) -> Tuple[list_handling.ListState, bool]:
-        cons: Consumable = state.instances[state.current]
-        new_rating = 0.1 if cons.rating is None else min(10, cons.rating + 0.1)
-        if new_rating != cons.rating:
-            new_cons = cons.update_self({"rating": new_rating})
-            state.instances[state.current] = new_cons
+        if len(state.instances) > 0:
+            cons: Consumable = state.instances[state.current]
+            new_rating = 0.1 if cons.rating is None else min(10, cons.rating + 0.1)
+            if new_rating != cons.rating:
+                new_cons = cons.update_self({"rating": new_rating})
+                state.instances[state.current] = new_cons
         return state, True
 
 
@@ -176,15 +182,16 @@ class ListDecrementCurrentRating(ListAction):
     def run(
         self, state: list_handling.ListState
     ) -> Tuple[list_handling.ListState, bool]:
-        cons: Consumable = state.instances[state.current]
-        new_rating = (
-            None
-            if cons.rating is None or cons.rating <= 0.15
-            else max(0, cons.rating - 0.1)
-        )
-        if new_rating != cons.rating:
-            new_cons = cons.update_self({"rating": new_rating})
-            state.instances[state.current] = new_cons
+        if len(state.instances) > 0:
+            cons: Consumable = state.instances[state.current]
+            new_rating = (
+                None
+                if cons.rating is None or cons.rating <= 0.15
+                else max(0, cons.rating - 0.1)
+            )
+            if new_rating != cons.rating:
+                new_cons = cons.update_self({"rating": new_rating})
+                state.instances[state.current] = new_cons
         return state, True
 
 
@@ -268,9 +275,10 @@ class ListViewConsumable(ListAction):
     def run(
         self, state: list_handling.ListState
     ) -> Tuple[list_handling.ListState, bool]:
-        details_handling.ConsumableDetailWindow(
-            state.instances[state.current]
-        ).init_run()
+        if len(state.instances) > 0:
+            details_handling.ConsumableDetailWindow(
+                state.instances[state.current]
+            ).init_run()
         return state, True
 
 
@@ -299,6 +307,7 @@ class ListRemoveSelectedPersonnel(ListAction):
                 ):
                     state.instances.pop(i)
         state.selected = set()
+        state.current = new_current(state)
         return state, True
 
 
@@ -312,14 +321,15 @@ class ListSeriesUpdate(ListAction):
     def run(
         self, state: list_handling.ListState
     ) -> Tuple[list_handling.ListState, bool]:
-        current_instance = state.instances[state.current]
-        updated_instance = cli_handling.SeriesHandler.update_fields(
-            [current_instance], force=True
-        )[0]
-        state.instances[state.current] = updated_instance
-        if current_instance in state.selected:
-            state.selected.remove(current_instance)
-            state.selected.add(updated_instance)
+        if len(state.instances) > 0:
+            current_instance = state.instances[state.current]
+            updated_instance = cli_handling.SeriesHandler.update_fields(
+                [current_instance], force=True
+            )[0]
+            state.instances[state.current] = updated_instance
+            if current_instance in state.selected:
+                state.selected.remove(current_instance)
+                state.selected.add(updated_instance)
         return state, True
 
 
@@ -336,7 +346,7 @@ class ListSeriesDelete(ListAction):
             filter(lambda x: x not in state.selected, state.instances)
         )
         state.selected = set()
-        state.current = min(len(state.instances) - 1, state.current)
+        state.current = new_current(state)
         return state, True
 
 
@@ -347,20 +357,21 @@ class ListSetSeriesConsumable(ListAction):
     def run(
         self, state: list_handling.ListState
     ) -> Tuple[list_handling.ListState, bool]:
-        # Get Consumables
-        consumable_list = list_handling.ConsumableList(Consumable.find())
-        consumable_list.order_by("name")
-        actions = [
-            *consumable_list._move_actions(),
-            *consumable_list._select_actions(),
-            ListEnd(-999, ["C"], action_name="Confirm Selection"),
-        ]
-        consumable_list.init_run(actions)
-        selected_consumables: Sequence[Consumable] = consumable_list.state.selected
-        # Assign Series
-        selected_series: Series = state.instances[state.current]
-        for consumable in selected_consumables:
-            consumable.set_series(selected_series)
+        if len(state.instances) > 0:
+            # Get Consumables
+            consumable_list = list_handling.ConsumableList(Consumable.find())
+            consumable_list.order_by("name")
+            actions = [
+                *consumable_list._move_actions(),
+                *consumable_list._select_actions(),
+                ListEnd(-999, ["C"], action_name="Confirm Selection"),
+            ]
+            consumable_list.init_run(actions)
+            selected_consumables: Sequence[Consumable] = consumable_list.state.selected
+            # Assign Series
+            selected_series: Series = state.instances[state.current]
+            for consumable in selected_consumables:
+                consumable.set_series(selected_series)
         return state, True
 
 
@@ -374,14 +385,15 @@ class ListPersonnelUpdate(ListAction):
     def run(
         self, state: list_handling.ListState
     ) -> Tuple[list_handling.ListState, bool]:
-        current_instance = state.instances[state.current]
-        updated_instance = cli_handling.PersonnelHandler.update_fields(
-            [current_instance], force=True
-        )[0]
-        state.instances[state.current] = updated_instance
-        if current_instance in state.selected:
-            state.selected.remove(current_instance)
-            state.selected.add(updated_instance)
+        if len(state.instances) > 0:
+            current_instance = state.instances[state.current]
+            updated_instance = cli_handling.PersonnelHandler.update_fields(
+                [current_instance], force=True
+            )[0]
+            state.instances[state.current] = updated_instance
+            if current_instance in state.selected:
+                state.selected.remove(current_instance)
+                state.selected.add(updated_instance)
         return state, True
 
 
@@ -398,7 +410,7 @@ class ListPersonnelDelete(ListAction):
             filter(lambda x: x not in state.selected, state.instances)
         )
         state.selected = set()
-        state.current = min(len(state.instances) - 1, state.current)
+        state.current = new_current(state)
         return state, True
 
 

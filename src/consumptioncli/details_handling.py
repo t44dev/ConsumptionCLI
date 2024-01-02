@@ -65,53 +65,27 @@ class ConsumableDetailWindow(BaseDetailWindow):
 
         # Add Info
         instance: Consumable = self.instance
-        window.addstr(
-            1,
-            BORDER_SIZE,
-            truncate(
-                f'#{instance.id} "{instance.name}"', coords.width() - BORDER_SIZE * 2
-            ),
+        to_date = (
+            lambda x: "n.d"
+            if x is None
+            else datetime.fromtimestamp(x).strftime(self.date_format)
         )
-        window.addstr(
-            2, BORDER_SIZE, truncate(instance.type, coords.width() - BORDER_SIZE * 2)
-        )
-
-        window.addstr(
-            4,
-            BORDER_SIZE,
-            truncate(
+        info_list = [
+            (1, f'#{instance.id} "{instance.name}"'),
+            (2, f"{instance.type} - " + ("No Series" if instance.get_series().id == -1 else str(instance.get_series()))),
+            (
+                4,
                 f"{instance.parts}/{'?' if instance.max_parts is None else instance.max_parts} parts, {instance.completions} Completion(s)",
-                coords.width() - BORDER_SIZE * 2,
             ),
-        )
-        if instance.start_date is not None or instance.end_date is not None:
-            start = (
-                "n.d."
-                if instance.start_date is None
-                else datetime.fromtimestamp(instance.start_date).strftime(
-                    self.date_format
-                )
-            )
-            end = (
-                "n.d."
-                if instance.end_date is None
-                else datetime.fromtimestamp(instance.end_date).strftime(
-                    self.date_format
-                )
-            )
-            window.addstr(
+            (
                 5,
-                BORDER_SIZE,
-                truncate(
-                    f"{instance.status.name}, {start} - {end}",
-                    coords.width() - BORDER_SIZE * 2,
-                ),
-            )
-        else:
-            window.addstr(
-                5,
-                BORDER_SIZE,
-                truncate(instance.status.name, coords.width() - BORDER_SIZE * 2),
-            )
+                f"{instance.status.name}{', ' + to_date(instance.start_date) + ' - ' + to_date(instance.end_date) if instance.start_date is not None or instance.end_date is not None else ''}",
+            ),
+        ]
+        for y_pos, info in info_list:
+            if y_pos < coords.height():
+                window.addstr(
+                    y_pos, BORDER_SIZE, truncate(info, coords.width() - BORDER_SIZE * 2)
+                )
 
         window.refresh()
