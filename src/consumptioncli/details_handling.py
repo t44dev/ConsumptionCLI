@@ -7,8 +7,9 @@ from datetime import datetime
 
 # Consumption Imports
 from consumptionbackend.Database import DatabaseEntity
-from consumptionbackend.Consumable import Consumable
+from consumptionbackend.Consumable import Consumable, average_rating
 from consumptionbackend.Series import Series
+from consumptionbackend.Personnel import Personnel
 from . import list_handling
 from . import list_actions
 from .curses_handling import init_curses, uninit_curses, new_win, CursesCoords
@@ -73,7 +74,15 @@ class ConsumableDetailWindow(BaseDetailWindow):
         )
         info_list = [
             (1, f'#{instance.id} "{instance.name}"'),
-            (2, f"{instance.type} - " + ("No Series" if instance.get_series().id == -1 else str(instance.get_series()))),
+            (
+                2,
+                f"{instance.type} - "
+                + (
+                    "No Series"
+                    if instance.get_series().id == -1
+                    else str(instance.get_series())
+                ),
+            ),
             (
                 4,
                 f"{instance.parts}/{'?' if instance.max_parts is None else instance.max_parts} parts, {instance.completions} Completion(s)",
@@ -91,13 +100,13 @@ class ConsumableDetailWindow(BaseDetailWindow):
 
         window.refresh()
 
-class SeriesDetailWindow(BaseDetailWindow):
 
+class SeriesDetailWindow(BaseDetailWindow):
     def run(self) -> None:
         instance: Series = self.instance
         actions = [
             *list_handling.BaseInstanceList._default_actions(),
-            list_actions.ListRemoveSelectedSeriesConsumable(self.instance, 500, ["R"])
+            list_actions.ListRemoveSelectedSeriesConsumable(self.instance, 500, ["R"]),
         ]
         super().run(
             list_handling.MiniInstanceList(instance.get_consumables(), "Consumables"),
@@ -117,8 +126,63 @@ class SeriesDetailWindow(BaseDetailWindow):
         consumables = instance.get_consumables()
         info_list = [
             (1, f'#{instance.id} "{instance.name}"'),
-            (3, f"{sum([c.parts for c in consumables])}/{sum([c.max_parts for c in consumables if c.max_parts is not None])}" + ("+? parts" if None in [c.max_parts for c in consumables] else " parts") + f", {sum([c.completions for c in consumables])} Total Completions"),
-            (4, f"{instance.average_rating():.2f} Average Rating")
+            (
+                3,
+                f"{sum([c.parts for c in consumables])}/{sum([c.max_parts for c in consumables if c.max_parts is not None])}"
+                + (
+                    "+? parts"
+                    if None in [c.max_parts for c in consumables]
+                    else " parts"
+                )
+                + f", {sum([c.completions for c in consumables])} Total Completions",
+            ),
+            (4, f"{average_rating(consumables):.2f} Average Rating"),
+        ]
+        for y_pos, info in info_list:
+            if y_pos < coords.height():
+                window.addstr(
+                    y_pos, BORDER_SIZE, truncate(info, coords.width() - BORDER_SIZE * 2)
+                )
+
+        window.refresh()
+
+
+class PersonnelDetailWindow(BaseDetailWindow):
+    def run(self) -> None:
+        instance: Personnel = self.instance
+        actions = [
+            *list_handling.BaseInstanceList._default_actions(),
+            list_actions.ListRemoveSelectedPersonnelConsumable(instance, 500, ["R"]),
+        ]
+        super().run(
+            list_handling.MiniInstanceList(instance.get_consumables(), "Consumables"),
+            actions,
+        )
+
+    def _render_info(self, window, coords: CursesCoords) -> None:
+        window.erase()
+
+        # Title and Border
+        window.box(0, 0)
+        window.addstr(0, 0, self.INFO_TITLE)
+        BORDER_SIZE = 1
+
+        # Add Info
+        instance: Personnel = self.instance
+        consumables = instance.get_consumables()
+        info_list = [
+            (1, f'#{instance.id} "{str(instance)}"'),
+            (
+                3,
+                f"{sum([c.parts for c in consumables])}/{sum([c.max_parts for c in consumables if c.max_parts is not None])}"
+                + (
+                    "+? parts"
+                    if None in [c.max_parts for c in consumables]
+                    else " parts"
+                )
+                + f", {sum([c.completions for c in consumables])} Total Completions",
+            ),
+            (4, f"{average_rating(consumables):.2f} Average Rating"),
         ]
         for y_pos, info in info_list:
             if y_pos < coords.height():

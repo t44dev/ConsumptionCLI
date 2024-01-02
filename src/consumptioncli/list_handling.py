@@ -330,9 +330,10 @@ class PersonnelList(BaseInstanceList):
         if actions is None:
             actions = [
                 *BaseInstanceList._default_actions(),
-                list_actions.ListPersonnelUpdate(999, ["U"]),
-                list_actions.ListPersonnelDelete(998, ["D"]),
-                list_actions.ListAddPersonnelConsumableSelected(997, ["C"]),
+                list_actions.ListViewPersonnel(999, ["V"]),
+                list_actions.ListPersonnelUpdate(899, ["U"]),
+                list_actions.ListPersonnelDelete(898, ["D"]),
+                list_actions.ListAddPersonnelConsumableSelected(799, ["C"]),
             ]
         super().init_run(actions, coords)
 

@@ -25,6 +25,7 @@
 - [ ] SQL to dedicated script file that is read from
 - [ ] Turn on type-checking and fix type-hint inconsistencies
 - [ ] Use sentinels library instead of own SentinelClass implementation
+- [ ] More info in list view about the selection (e.g. average rating)
 - [ ] Fix Bugs
     - [ ] Completion doesn't set parts to max_parts
     - [ ] Completion doesn't set start date
@@ -32,5 +33,6 @@
     - [ ] Mismatched date timezones
 - [ ] Add to Details Window
     - [ ] Number of Personnel attached to Consumable
+    - [ ] Number of consumables attached to Series
     - [ ] Number of Consumables attached to Personnel
     - [ ] Refresh details after list action
