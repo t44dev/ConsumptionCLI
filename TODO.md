@@ -1,13 +1,13 @@
 # TODO LIST
 ## Current
 - [x] Force flag on update and delete
-- [ ] "View" page for entities
+- [x] "View" page for entities
 - [x] Expand interactive list actions
 - [x] Log file
 - [ ] Add badges/shields to README
 - [ ] Update readme
-- [ ] Update version
-- [ ] Update the version change script
+- [x] Update version
+- [x] Update the version change script
 - [x] Allow setting of NoneType for max_parts
 - [x] Tag Search should be an AND not an OR over the searched tags
 
