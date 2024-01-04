@@ -39,7 +39,7 @@ $ pip install .
 ## Basic Usage
 **ConsumptionCLI** includes 3 different entities:
 - *Consumables* - Main entity type and are intended to represent things such as Movies, TV Shows, Novels, etc. However, they can be used for whatever purposes you desire.
-- *Series* - Secondary entity. Each *Consumable* can be affiliated with one of these. Intended to represent an entire series, for example if a TV Show has multiple seasons each season may be represented with its own *Consumable* and all of these consumables may be attached to the same *Series*.
+- *Series* - Secondary entity. Each *Consumable* can be affiliated with one of these. Intended to represent an entire series, for example if a TV Show has multiple seasons each season may be represented with its own *Consumable* and all of these *Consumables* may be attached to the same *Series*.
 - *Personnel* - Secondary entity. Can be affiliated with *Consumables* along with some role such as Author, Illustrator, etc.
 
 There are 4 main actions that can be performed on each of these entities. Namely *New*, *Update*, *Delete* and *List*. More detail on these actions is given in the sections below.
@@ -55,9 +55,9 @@ $ cons consumable new --name 1984 --type NOVEL
   1     1  NOVEL     1984  0/?                            0  PLANNING
 ```
 
-Observe that on creation of a Consumable a table containing the values associated with the new Consumable including the type of media and name along with other properties is displayed. Each of these properties can be adjusted manually using the appropriate flags (e.g. `--rating NUMBER`). 
+Observe that on creation of a *Consumable* a table containing the values associated with the new *Consumable* including the type of media and name along with other properties is displayed. Each of these properties can be adjusted manually using the appropriate flags (e.g. `--rating NUMBER`). 
 
-Some fields can be ommited and are filled with sensible defaults while others, such as `name` and `type` in the case of consumables, are required and will be prompted for if not provided initially.
+Some fields can be ommited and are filled with sensible defaults while others, such as `name` and `type` in the case of *Consumables*, are required and will be prompted for if not provided initially.
 
 Creation of *Series* and *Personnel* can be done with `series` and `personnel` in place of `consumable` respectively. 
 
@@ -75,7 +75,7 @@ $ cons c n -n 1984 -t NOVEL
 
 All the fields for each of the entities can be changed using the update action. Note that there are some constraints on how these can be changed in order to prevent invalid states and help maintain consistency but in general the system is very flexible. 
 
-One main reason you may want to update a consumable is to change the status. There are 5 statuses that can be associated with any one Consumable including ```PLANNING```,```IN_PROGRESS```,```ON_HOLD```, ```DROPPED``` and ```COMPLETED```. By default Consumables are set in the ```PLANNING``` stage. Updating can be performed through the following:
+One main reason you may want to update a *Consumable* is to change the status. There are 5 statuses that can be associated with any one *Consumable* including ```PLANNING```,```IN_PROGRESS```,```ON_HOLD```, ```DROPPED``` and ```COMPLETED```. By default *Consumables* are set in the ```PLANNING``` stage. Updating can be performed through the following:
 
 ```console
 $ cons consumable update --name 1984 set --status IN_PROGRESS --parts 2
@@ -88,12 +88,12 @@ Observe that we first specify some search paramaters by which to find the *Consu
 
 Note that if multiple *Consumables* match the search conditions then you will be prompted to confirm the update of each one. Additionally, fields such as names are not case-sensitive and only have to include part of the entire string allowing easy mass updating of related entities (e.g. setting the same series for multiple *Consumables*). 
 
-Date's are largely handled by the system automatically and setting the status of a Consumable to ```IN_PROGRESS``` which does not have an associated start date will automatically set it to present day. 
+Dates are largely handled by the system automatically and setting the status of a *Consumable* to ```IN_PROGRESS``` which does not have an associated start date will automatically set it to present day. 
 
 > Note that if you want to update the date fields manually the default format is **YYYY/mm/dd**. As a result this format should be used when specifying a date using the ```--startdate``` and ```--enddate``` options. Alternatively a different date format can be supplied using ```--dateformat```. E.g. ```--dateformat %d-%m-%Y```.
 
 ### Delete
-Consumables can also be deleted by any field:
+*Consumables* can also be deleted by any field:
 
 ```console
 $ cons consumable delete --name 1984
@@ -103,7 +103,7 @@ $ cons consumable delete --name 1984
 The same logic applies to deletions as does to updates in terms of search paramaters. Again, confirmation of deletion will be required when multiple entities match the search parameters.
 
 ### List
-All consumables, or a subset according to some search parameters, can be viewed using the list action. The most basic example is to provide no paramaters and simply view all results. By default this opens an interactive session which can be scrolled through using the keyboard:
+All *Consumables*, or a subset according to some search parameters, can be viewed using the list action. The most basic example is to provide no paramaters and simply view all results. By default this opens an interactive session which can be scrolled through using the keyboard:
 
 ```console
 cons consumable list
@@ -122,7 +122,7 @@ cons consumable list
 [K/↑] Up   [J/↓] Down   [Enter] Select   [Q] Quit
 ```
 
-By default the listed Consumables are ordered by name however the ordering can be changed using ```--order``` (and ```--reverse``` to reverse the order):
+By default the listed *Consumables* are ordered by name however the ordering can be changed using ```--order``` (and ```--reverse``` to reverse the order):
 
 ```console
 $ cons consumable list --order rating --reverse
