@@ -4,8 +4,8 @@
 - [x] "View" page for entities
 - [x] Expand interactive list actions
 - [x] Log file
-- [ ] Add badges/shields to README
-- [ ] Update readme
+- [x] Add badges/shields to README
+- [x] Update readme
 - [x] Update version
 - [x] Update the version change script
 - [x] Allow setting of NoneType for max_parts

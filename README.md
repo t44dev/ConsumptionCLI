@@ -1,5 +1,8 @@
 # ConsumptionCLI
 
+![PyPI - Version](https://img.shields.io/pypi/v/consumptioncli) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/consumptioncli) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/t/track-44/consumptioncli) ![GitHub repo size](https://img.shields.io/github/repo-size/track-44/consumptioncli) ![PyPI - License](https://img.shields.io/pypi/l/consumptioncli) 
+
+
 ## About
 Written in Python, **ConsumptionCLI** is a lightweight command line interface tool for keeping track of various types of media. It acts as a simpler alternative to services such as *goodreads* and *bookmeter* for Novels or *IMDb* and *Letterboxd* for TV Shows and Movies. It also provides enough flexibiltiy to keep track of any number of other formats.
 
