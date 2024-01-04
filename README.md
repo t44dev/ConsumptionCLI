@@ -122,8 +122,6 @@ cons consumable list
 [K/↑] Up   [J/↓] Down   [Enter] Select   [Q] Quit
 ```
 
-> Note that currently the interactive session is in an unfinished state and does not provide any functionality over a static viewing however is projected to in the future. The option `--static` can be used along with viewing lists of entities to view the entire table at once statically.
-
 By default the listed Consumables are ordered by name however the ordering can be changed using ```--order``` (and ```--reverse``` to reverse the order):
 
 ```console
@@ -155,6 +153,28 @@ $ cons consumable list --type NOVEL
     5    11  NOVEL   War and Peace          0/?                            0  PLANNING
 
 [K/↑] Up   [J/↓] Down   [Enter] Select   [Q] Quit
+```
+
+#### List Actions
+
+In addition to being able to traverse the interactive list other actions such as updating and deleting selected entries, attaching *Series* or *Personnel* to *Consumable(s)*, managing tags and viewing more info of an entry can be done using the various given button prompts at the bottom of the listing. 
+
+The **View Info** action is significant as it can be used to see additional information on an entry that is not presented in the compact list view such as *Series* and associated *Personnel* for a *Consumable*. This action itself allows viewing of this information from another interactive session:
+
+```console
+Info───────────────────────────────────────────────────────┐Personnel──────────────────────────────────────────────────┐
+│#1 "1984"                                                 ││> [author] George Orwell <                                │
+│NOVEL - No Series                                         ││  [publisher] "Secker & Warburg"                          │
+│                                                          ││                                                          │
+│23/23 parts, 1 Completion(s)                              ││                                                          │
+│COMPLETED, 2023/07/02 - 2023/07/02                        ││                                                          │
+│                                                          ││                                                          │
+│Tag(s): 1949 english                                      ││                                                          │
+│                                                          ││                                                          │
+│                                                          ││                                                          │
+│                                                          ││[K/↑] Up   [J/↓] Down   [Enter] Select   [A] Deselect All │
+│                                                          ││[R] Remove Selected   [Q] Quit                            │
+└──────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
 ```
 
 ### More
