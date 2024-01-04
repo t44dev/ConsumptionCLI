@@ -97,7 +97,7 @@ class ConsumableDetailWindow(BaseDetailWindow):
                 window.addstr(
                     y_pos, BORDER_SIZE, truncate(info, coords.width() - BORDER_SIZE * 2)
                 )
-        
+
         # Tags
         tag_y = 7
         window.addstr(tag_y, BORDER_SIZE, "Tag(s): " + " ".join(instance.get_tags()))
