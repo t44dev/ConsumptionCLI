@@ -1,13 +1,16 @@
 # General Imports
 from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import Tuple
+from itertools import count
 import curses
-from collections.abc import Sequence, Mapping
-from typing import Callable, Tuple, TypeAlias
+from collections.abc import Sequence
+from consumptioncli.list_actions import ListAction
 from tabulate import tabulate
 from .utils import truncate
 
 # Consumption Imports
+from .curses_handling import init_curses, uninit_curses, new_win, CursesCoords
 from consumptionbackend.Database import DatabaseEntity
 from consumptionbackend.Consumable import Consumable
 from consumptionbackend.Series import Series
@@ -20,127 +23,242 @@ class ListState:
         self.instances = instances
         self.selected = set()
         self.current = 0
-        self.active = True
+        self.window = None
+        self.coords = CursesCoords()
 
-
-Action: TypeAlias = Tuple[str, Callable[[ListState], ListState], str, int]
-# Dictionary that maps key names (as in keyboard) to a tuple of an action name,
-# a callable that updates some ListState, a key name alias and a priority for display
-Actions: TypeAlias = Mapping[str, Action]
+    def order_by(self, key: str, reverse: bool = False) -> None:
+        # Thanks to Andrew Clark for solution to sorting list with NoneTypes https://stackoverflow.com/a/18411610
+        self.instances = sorted(
+            self.instances,
+            key=lambda a: (getattr(a, key) is not None, getattr(a, key)),
+            reverse=reverse,
+        )
 
 
 class BaseInstanceList(ABC):
+    LIST_TITLE: str = "List"
+
     def __init__(self, instances: Sequence[DatabaseEntity]) -> None:
         self.state = ListState(instances)
 
     @abstractmethod
-    def run(self) -> None:
+    def tabulate_str(self) -> str:
         pass
 
-    @abstractmethod
-    def tabulate(self) -> str:
-        pass
+    def tabulate(self) -> Tuple[Sequence[str], Sequence[str]]:
+        table = self.tabulate_str().split("\n")
+        return (table[:2], table[2:])
 
-    def _run(self, actions: Actions) -> None:
+    def init_run(
+        self, actions: Sequence[list_actions.ListAction], coords: CursesCoords = None
+    ) -> None:
+        init_curses()
+        self.run(actions, coords)
+        uninit_curses()
+
+    def run(
+        self, actions: Sequence[list_actions.ListAction], coords: CursesCoords = None
+    ) -> None:
         # Setup State
+        self.state.coords = coords if coords is not None else CursesCoords()
+        self.state.window = new_win(self.state.coords)
         actions = BaseInstanceList._setup_actions(actions)
-        window = curses.initscr()
-        curses.noecho()
-        curses.cbreak()
-        curses.curs_set(False)
-        window.keypad(True)
         # Render/Action Loop
-        while self.state.active:
-            self._render(self.tabulate(), actions, window)
-            key = window.getkey().upper()
-            if key in actions:
-                self.state = actions[key][1](self.state)
-        # Reset State
-        curses.echo()
-        curses.nocbreak()
-        curses.curs_set(True)
-        window.keypad(False)
-        curses.endwin()
+        self._handle(actions)
 
-    def _render(self, table: str, actions: Actions, window) -> None:
-        window.erase()
-        table = table.split("\n")
-        # Render Table
-        headers = table[:2]
-        body = table[2:]
-        # Header
-        window.addstr(0, 2, headers[0], curses.A_BOLD)
-        window.addstr(1, 2, headers[1], curses.A_BOLD)
-        # Body
-        lines_before_after = curses.LINES - 5
-        start_index = max(0, self.state.current - (lines_before_after // 2))
-        difference = start_index - (self.state.current - (lines_before_after // 2))
-        end_index = min(
-            len(self.state.instances) - 1,
-            self.state.current + (lines_before_after // 2) + difference,
-        )
-        displayed = body[start_index : end_index + 1]
-        for i, line in enumerate(displayed):
-            true_i = i + start_index
-            y_pos = i + 2
-            attr = (
-                curses.A_STANDOUT
-                if self.state.instances[true_i] in self.state.selected
-                else curses.A_NORMAL
+    def _handle(self, actions: Sequence[list_actions.ListAction]) -> None:
+        cont = True
+        while cont:
+            # Render
+            headers, body = self.tabulate()
+            self._render(headers, body, actions)
+            # Action
+            key = self.state.window.getkey().upper()
+            for action in actions:
+                if key in action.keys:
+                    self.state, cont = action.run(self.state)
+
+    @classmethod
+    def _action_strs(cls, actions: Sequence[list_actions.ListAction]) -> Sequence[str]:
+        return [
+            f"[{'/'.join(action.key_aliases)}] {action.ACTION_NAME}"
+            for action in actions
+        ]
+
+    @classmethod
+    def _action_str(cls, actions: Sequence[list_actions.ListAction]) -> str:
+        return "   ".join(cls._action_strs(actions))
+
+    @classmethod
+    def _grouped_action_strs(
+        cls, actions: Sequence[list_actions.ListAction], width: int, spacing: int = 3
+    ) -> Sequence[Sequence[str]]:
+        action_strs = cls._action_strs(actions)
+        if len(action_strs) == 0:
+            return [[]]
+
+        current_group = 0
+        groups = [[action_strs.pop(0)]]
+        for action_str in action_strs:
+            new_length = (
+                sum(map(len, groups[current_group]))
+                + len(action_str)
+                + spacing * len(groups[current_group])
             )
-            if true_i == self.state.current:
-                window.addstr(y_pos, 0, f"> {line} <", attr)
+            if new_length <= width:
+                groups[current_group].append(action_str)
             else:
-                window.addstr(y_pos, 2, line, attr)
-        # Render Actions
-        processed_actions = dict()
-        for key, (name, _, alias, priority) in sorted(
-            actions.items(), key=lambda x: x[1][3], reverse=True
-        ):
-            if name in processed_actions:
-                if alias not in processed_actions.get(name)[0]:
-                    processed_actions.get(name)[0].append(alias)
-            else:
-                processed_actions[name] = [[alias], priority]
-        processed_actions = sorted(
-            processed_actions.items(), key=lambda x: x[1][1], reverse=True
+                groups.append([action_str])
+                current_group += 1
+        return groups
+
+    def _render(
+        self,
+        headers: Sequence[str],
+        body: Sequence[str],
+        actions: Sequence[list_actions.ListAction],
+    ) -> None:
+        window = self.state.window
+        instances = self.state.instances
+        selected = self.state.selected
+        current_index = self.state.current
+        window.erase()
+
+        # Title and border
+        window.box(0, 0)
+        window.addstr(0, 0, truncate(self.LIST_TITLE, self.state.coords.width()))
+        BORDER_SIZE = 1
+        ## Relative coordinates of inner box
+        coords = CursesCoords(
+            BORDER_SIZE,
+            BORDER_SIZE,
+            self.state.coords.width() - BORDER_SIZE,
+            self.state.coords.height() - BORDER_SIZE,
         )
-        action_strings = []
-        for name, (aliases, _) in processed_actions:
-            action_strings.append(f"[{'/'.join(aliases)}] {name}")
-        window.addstr(curses.LINES - 1, 0, "   ".join(action_strings))
+
+        # Render Actions
+        action_groups = BaseInstanceList._grouped_action_strs(actions, coords.width())
+        action_lines = len(action_groups)
+        for line_number, group in enumerate(action_groups):
+            action_y = max(coords.y_start, (coords.y_max - action_lines) + line_number)
+            if action_y < coords.y_max:
+                action_string = "   ".join(group)
+                window.addstr(action_y, coords.x_start, action_string)
+        coords.delta_y_max(-action_lines - 1)
+
+        # Render Table
+        INDENT = 2
+
+        ## Header
+        header_lines = 0
+        for header_line in headers:
+            if header_lines < coords.height():
+                header_y = header_lines + coords.y_start
+                window.addstr(
+                    header_y,
+                    INDENT + 1,
+                    truncate(header_line, coords.width() - INDENT),
+                    curses.A_BOLD,
+                )
+                header_lines += 1
+        coords.delta_y_start(header_lines)
+
+        ## Body
+        start_index = max(0, current_index - (coords.height() // 2))
+        end_index = min(len(body), start_index + coords.height())
+        for i, y_pos in zip(range(start_index, end_index), count(coords.y_start)):
+            line = body[i]
+            style = curses.A_STANDOUT if instances[i] in selected else curses.A_NORMAL
+            if i == self.state.current:
+                window.addstr(
+                    y_pos,
+                    coords.x_start,
+                    f"> {truncate(line, coords.width() - 2*INDENT)} <",
+                    style,
+                )
+            else:
+                window.addstr(
+                    y_pos,
+                    coords.x_start + INDENT,
+                    truncate(line, coords.width() - INDENT),
+                    style,
+                )
         window.refresh()
 
     @classmethod
-    def _setup_actions(cls, actions: Actions) -> Actions:
-        actions["K"] = ("Up", list_actions.move_up, "K", 9999)
-        actions["KEY_UP"] = ("Up", list_actions.move_up, "↑", 9998)
-        actions["J"] = ("Down", list_actions.move_down, "J", 9997)
-        actions["KEY_DOWN"] = ("Down", list_actions.move_down, "↓", 9996)
-        actions["\n"] = ("Select", list_actions.select_current, "Enter", 9995)
-        actions["KEY_ENTER"] = ("Select", list_actions.select_current, "Enter", 9994)
-        actions["Q"] = ("Quit", list_actions.quit, "Q", -9999)
+    def _select_actions(cls) -> Sequence[list_actions.ListAction]:
+        return [
+            list_actions.ListSelect(9997, ["\n", "KEY_ENTER"], ["Enter"]),
+            list_actions.ListDeselectAll(9996, ["A"]),
+        ]
+
+    @classmethod
+    def _move_actions(cls) -> Sequence[list_actions.ListAction]:
+        return [
+            list_actions.ListUp(9999, ["K", "KEY_UP"], ["K", "↑"]),
+            list_actions.ListDown(9998, ["J", "KEY_DOWN"], ["J", "↓"]),
+        ]
+
+    @classmethod
+    def _default_actions(cls):
+        return [
+            list_actions.ListEnd(-9999, ["Q"]),
+            *BaseInstanceList._move_actions(),
+            *BaseInstanceList._select_actions(),
+        ]
+
+    @classmethod
+    def _setup_actions(
+        cls, actions: Sequence[list_actions.ListAction]
+    ) -> Sequence[list_actions.ListAction]:
+        actions = sorted(actions, key=lambda x: x.priority, reverse=True)
         return actions
+
+    def order_by(self, key: str, reverse: bool = False) -> None:
+        self.state.order_by(key, reverse)
 
 
 class ConsumableList(BaseInstanceList):
+    LIST_TITLE: str = "Consumable List"
+
     def __init__(
         self, instances: Sequence[Consumable], date_format: str = r"%Y/%m/%d"
     ) -> None:
         super().__init__(instances)
         self.date_format = date_format
 
-    def run(self) -> None:
-        super()._run(dict())
+    def init_run(
+        self,
+        actions: Sequence[list_actions.ListAction] = None,
+        coords: CursesCoords = None,
+    ) -> None:
+        if actions is None:
+            actions = [
+                *BaseInstanceList._default_actions(),
+                list_actions.ListViewConsumable(999, ["V"]),
+                list_actions.ListConsumableUpdate(899, ["U"]),
+                list_actions.ListConsumableDelete(898, ["D"]),
+                list_actions.ListIncrementCurrentRating(
+                    799, ["L", "KEY_RIGHT"], ["L", "→"]
+                ),
+                list_actions.ListDecrementCurrentRating(
+                    798, ["H", "KEY_LEFT"], ["H", "←"]
+                ),
+                list_actions.ListTagSelected(699, ["T"]),
+                list_actions.ListUntagSelected(698, ["G"]),
+                list_actions.ListSetConsumableSeriesSelected(799, ["S"]),
+                list_actions.ListAddConsumablePersonnelSelected(798, ["P"]),
+            ]
+        super().init_run(actions, coords)
 
-    def tabulate(self) -> str:
+    def tabulate_str(self) -> str:
         instances: Sequence[Consumable] = self.state.instances
         table_instances = [
             [
                 row + 1,
                 i.id,
                 i.type,
-                truncate(i.name),
+                truncate(i.name, 50),
                 f"{i.parts}/{'?' if i.max_parts is None else i.max_parts}",
                 i.rating,
                 i.completions,
@@ -172,26 +290,54 @@ class ConsumableList(BaseInstanceList):
 
 
 class SeriesList(BaseInstanceList):
+    LIST_TITLE: str = "Series List"
+
     def __init__(self, instances: Sequence[Series]) -> None:
         super().__init__(instances)
 
-    def run(self) -> None:
-        super()._run(dict())
+    def init_run(
+        self,
+        actions: Sequence[list_actions.ListAction] = None,
+        coords: CursesCoords = None,
+    ) -> None:
+        if actions is None:
+            actions = [
+                *BaseInstanceList._default_actions(),
+                list_actions.ListViewSeries(999, ["V"]),
+                list_actions.ListSeriesUpdate(899, ["U"]),
+                list_actions.ListSeriesDelete(898, ["D"]),
+                list_actions.ListSetSeriesConsumable(799, ["C"]),
+            ]
+        super().init_run(actions, coords)
 
-    def tabulate(self) -> str:
+    def tabulate_str(self) -> str:
         instances: Sequence[Series] = self.state.instances
         table_instances = [[row + 1, i.id, i.name] for row, i in enumerate(instances)]
         return tabulate(table_instances, headers=["#", "ID", "Name"])
 
 
 class PersonnelList(BaseInstanceList):
+    LIST_TITLE: str = "Personnel List"
+
     def __init__(self, instances: Sequence[Personnel]) -> None:
         super().__init__(instances)
 
-    def run(self) -> None:
-        super()._run(dict())
+    def init_run(
+        self,
+        actions: Sequence[list_actions.ListAction] = None,
+        coords: CursesCoords = None,
+    ) -> None:
+        if actions is None:
+            actions = [
+                *BaseInstanceList._default_actions(),
+                list_actions.ListViewPersonnel(999, ["V"]),
+                list_actions.ListPersonnelUpdate(899, ["U"]),
+                list_actions.ListPersonnelDelete(898, ["D"]),
+                list_actions.ListAddPersonnelConsumableSelected(799, ["C"]),
+            ]
+        super().init_run(actions, coords)
 
-    def tabulate(self) -> str:
+    def tabulate_str(self) -> str:
         instances: Sequence[Personnel] = self.state.instances
         table_instances = [
             [row + 1, i.id, i.first_name, i.pseudonym, i.last_name]
@@ -200,3 +346,15 @@ class PersonnelList(BaseInstanceList):
         return tabulate(
             table_instances, headers=["#", "ID", "First Name", "Pseudonym", "Last Name"]
         )
+
+
+class MiniInstanceList(BaseInstanceList):
+    def __init__(self, instances: Sequence[DatabaseEntity], header="List") -> None:
+        self.LIST_TITLE = header
+        super().__init__(instances)
+
+    def tabulate_str(self) -> str:
+        return "\n".join(map(str, self.state.instances))
+
+    def tabulate(self) -> Tuple[Sequence[str], Sequence[str]]:
+        return ([], [str(c) for c in self.state.instances])
