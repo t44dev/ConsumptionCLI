@@ -1,20 +1,13 @@
 # TODO LIST
 ## Current
-- [x] Force flag on update and delete
-- [x] "View" page for entities
-- [x] Expand interactive list actions
-- [x] Log file
-- [x] Add badges/shields to README
-- [x] Update readme
-- [x] Update version
-- [x] Update the version change script
-- [x] Allow setting of NoneType for max_parts
-- [x] Tag Search should be an AND not an OR over the searched tags
-
-- [x] ListAction class
-- [x] Classes in parsers.py for better SOC
 
 ## Next
+- [ ] "cons c v" to view Consumable directly
+- [ ] Exclude tags from search
+- [ ] ID cannot be used to select in Personnel update
+- [ ] Fast scrolling through lists
+- [ ] Add counter to selected text in list view
+- [ ] Expand listed fields in Personnel and Series listing, names in 1 column
 - [ ] Adaptive name truncation
 - [ ] Meaningful Boolean returns
 - [ ] Handle window resize curses
@@ -31,6 +24,7 @@
     - [ ] Completion doesn't set start date
     - [ ] Normalize "None" values e.g. Null, None, ?
     - [ ] Mismatched date timezones
+    - [ ] IntegrityError when adding same Personnel/Role combo to Consumable
 - [ ] Add to Details Window
     - [ ] Number of Personnel attached to Consumable
     - [ ] Number of consumables attached to Series
